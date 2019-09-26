@@ -2,6 +2,8 @@
 
 #include <assert.h>
 
+using namespace RLI;
+
 FboLayerBase::FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent)
   : QObject(parent)
   , QOpenGLFunctions(context) {

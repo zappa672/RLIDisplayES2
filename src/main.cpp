@@ -12,6 +12,10 @@ void parseArgs(QApplication& a);
 
 
 int main(int argc, char *argv[]) {
+  if (QThreadPool::globalInstance()->maxThreadCount() < RLI_THREADS_NUM)
+    QThreadPool::globalInstance()->setMaxThreadCount(RLI_THREADS_NUM);
+  qDebug() << "Max number of threads: " << QThreadPool::globalInstance()->maxThreadCount();
+
   QApplication a(argc, argv);
 
   QGLFormat format = QGLFormat::defaultFormat();
@@ -22,7 +26,7 @@ int main(int argc, char *argv[]) {
 
   parseArgs(a);
 
-  MainWidget w;
+  RLI::MainWidget w;
   w.showFullScreen();
 
   return a.exec();
@@ -41,12 +45,12 @@ void parseArgs(QApplication& a) {
     exit(0);
   }
 
-  a.setProperty(PROPERTY_PELENG_SIZE, args.contains("-p") ? args[args.indexOf("-p") + 1].toInt() : 800);
-  a.setProperty(PROPERTY_BEARINGS_PER_CYCLE, args.contains("-b") ? args[args.indexOf("-b") + 1].toInt() : 4096);
-  a.setProperty(PROPERTY_FRAME_DELAY, args.contains("-f") ? args[args.indexOf("-f") + 1].toInt() : 25);
-  a.setProperty(PROPERTY_DATA_DELAY, args.contains("-d") ? args[args.indexOf("-d") + 1].toInt() : 30);
-  a.setProperty(PROPERTY_BLOCK_SIZE, args.contains("-s") ? args[args.indexOf("-s") + 1].toInt() : 128);
+  a.setProperty(RLI::PROPERTY_PELENG_SIZE, args.contains("-p") ? args[args.indexOf("-p") + 1].toInt() : 800);
+  a.setProperty(RLI::PROPERTY_BEARINGS_PER_CYCLE, args.contains("-b") ? args[args.indexOf("-b") + 1].toInt() : 4096);
+  a.setProperty(RLI::PROPERTY_FRAME_DELAY, args.contains("-f") ? args[args.indexOf("-f") + 1].toInt() : 25);
+  a.setProperty(RLI::PROPERTY_DATA_DELAY, args.contains("-d") ? args[args.indexOf("-d") + 1].toInt() : 30);
+  a.setProperty(RLI::PROPERTY_BLOCK_SIZE, args.contains("-s") ? args[args.indexOf("-s") + 1].toInt() : 128);
 
   if (args.contains("-w"))
-    a.setProperty(PROPERTY_RLI_WIDGET_SIZE, args[args.indexOf("-w") + 1]);
+    a.setProperty(RLI::PROPERTY_RLI_WIDGET_SIZE, args[args.indexOf("-w") + 1]);
 }

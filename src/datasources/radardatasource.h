@@ -8,47 +8,51 @@
 #include <QtGlobal>
 #include <QOpenGLFunctions>
 
-class RadarDataSource : public QObject {
-  Q_OBJECT
-public:
-  explicit RadarDataSource(QObject* parent = nullptr);
-  virtual ~RadarDataSource();
+namespace RLI {
 
-public slots:
-  void start();
-  void stop();
+  class RadarDataSource : public QObject {
+    Q_OBJECT
+  public:
+    explicit RadarDataSource(QObject* parent = nullptr);
+    virtual ~RadarDataSource();
 
-signals:
-  void updateRadarData(int offset, int count, GLfloat* amps);
-  void updateTrailData(int offset, int count, GLfloat* amps);
+  public slots:
+    void start();
+    void stop();
 
-protected slots:
-  void timerEvent(QTimerEvent* e);
+  signals:
+    void updateRadarData(int offset, int count, GLfloat* amps);
+    void updateTrailData(int offset, int count, GLfloat* amps);
 
-private:
-  bool loadData();
+  protected slots:
+    void timerEvent(QTimerEvent* e);
 
-  bool loadObserves1(char* filename, GLfloat* amps);
+  private:
+    bool loadData();
 
-  bool initWithDummy1(float* amps);
-  bool initWithDummy2(float* amps);
-  bool initWithDummy3(float* amps);
-  bool initWithDummy4(float* amps);
+    bool loadObserves1(char* filename, GLfloat* amps);
 
-  int _timerId = -1;
+    bool initWithDummy1(float* amps);
+    bool initWithDummy2(float* amps);
+    bool initWithDummy3(float* amps);
+    bool initWithDummy4(float* amps);
 
-  GLfloat* file_amps1[2];
-  GLfloat* file_amps2[2];
+    int _timerId = -1;
 
-  int _timer_period;
-  int _blocks_to_send;
+    GLfloat* file_amps1[2];
+    GLfloat* file_amps2[2];
 
-  int _file = 0;
-  int _offset = 0;
+    int _timer_period;
+    int _blocks_to_send;
 
-  int _peleng_size;
-  int _bearings_per_cycle;
-};
+    int _file = 0;
+    int _offset = 0;
+
+    int _peleng_size;
+    int _bearings_per_cycle;
+  };
+
+}
 
 #endif // RADARDATASOURCE_H
 

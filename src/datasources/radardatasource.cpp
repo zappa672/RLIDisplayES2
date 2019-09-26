@@ -10,11 +10,9 @@
 #include <stdint.h>
 #include <QDebug>
 
-void qSleep(int ms) {
-  if (ms <= 0) return;
-  struct timespec ts = { ms / 1000, (ms % 1000) * 1000 * 1000 };
-  nanosleep(&ts, nullptr);
-}
+using namespace RLI;
+
+
 
 RadarDataSource::RadarDataSource(QObject* parent) : QObject(parent) {
   //finish_flag = true;
@@ -23,11 +21,6 @@ RadarDataSource::RadarDataSource(QObject* parent) : QObject(parent) {
   _bearings_per_cycle  = qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt();
   _timer_period        = qApp->property(PROPERTY_DATA_DELAY).toInt();
   _blocks_to_send      = qApp->property(PROPERTY_BLOCK_SIZE).toInt();
-
-  qDebug() << _peleng_size         ;
-  qDebug() << _bearings_per_cycle  ;
-  qDebug() << _timer_period        ;
-  qDebug() << _blocks_to_send      ;
 
   file_amps1[0] = new GLfloat[_peleng_size*_bearings_per_cycle];
   file_amps1[1] = new GLfloat[_peleng_size*_bearings_per_cycle];
@@ -59,7 +52,7 @@ void RadarDataSource::stop() {
 }
 
 void RadarDataSource::timerEvent(QTimerEvent* e) {
-  Q_UNUSED(e);    
+  Q_UNUSED(e)
 
   QtConcurrent::run([&](int offset, int file) {
     emit updateRadarData(offset, _blocks_to_send, &file_amps1[file][offset * _peleng_size]);

@@ -23,12 +23,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+  src/common/radarscale.cpp \
+  src/common/layout.cpp \
+  src/common/math.cpp \
+  src/common/state.cpp \
   src/main.cpp \
   src/mainwidget.cpp \
   src/datasources/radardatasource.cpp \
   src/layers/fbolayerbase.cpp
 
 HEADERS += \
+  src/common/radarscale.h \
+  src/common/layout.h \
+  src/common/math.h \
+  src/common/state.h \
   src/mainwidget.h \
   src/common/properties.h \
   src/datasources/radardatasource.h \  
@@ -40,3 +48,6 @@ FORMS +=
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+  layouts.xml

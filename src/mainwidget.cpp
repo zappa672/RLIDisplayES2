@@ -1,12 +1,12 @@
 #include "mainwidget.h"
 
+using namespace RLI;
+
 MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
 
   _ds_radar = new RadarDataSource(this);
-
-  qDebug() << 1;
   _ds_radar->start();
-  qDebug() << 2;
+
 }
 
 MainWidget::~MainWidget() {
@@ -45,14 +45,18 @@ void MainWidget::initializeGL() {
   _timerId = startTimer(33, Qt::CoarseTimer);
 }
 
-void MainWidget::resizeGL(int, int) {
+void MainWidget::resizeGL(int w, int h) {
+  _layout_manager.resize(QSize(w, h));
+
   _projection.setToIdentity();
   _projection.ortho(geometry());
 
   if (_timerId == -1)
     return;
 
-  _layer->resize(QSize(256, 256));
+  Layout* layout = _layout_manager.layout();
+
+  _layer->resize(layout->circle.box_rect.size());
 }
 
 void MainWidget::paintGL() {
@@ -71,7 +75,9 @@ void MainWidget::paintGL() {
   glClearColor(0.3f, 0.5f, 0.4f, 1.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  drawRect(QRect(QPoint(128, 128), _layer->size()), _layer->textureId());
+  Layout* layout = _layout_manager.layout();
+
+  drawRect(layout->circle.box_rect, _layer->textureId());
 
   glFlush();
 }

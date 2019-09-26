@@ -21,9 +21,6 @@ FboLayerBase::~FboLayerBase() {
 
 
 void FboLayerBase::clear(float r, float g, float b, float a, float d) {
-  glDisable(GL_BLEND);
-  glDisable(GL_DEPTH_TEST);
-
   glBindFramebuffer(GL_FRAMEBUFFER, _fbo_id);
 
   glClearDepthf(d);

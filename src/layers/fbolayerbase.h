@@ -6,6 +6,9 @@
 
 #include <QSize>
 
+#include "../common/layout.h"
+#include "../common/state.h"
+
 namespace RLI {
 
   class FboLayerBase : public QObject, protected QOpenGLFunctions {
@@ -18,13 +21,14 @@ namespace RLI {
     inline const GLuint&  textureId()   const { return _fbo_tex_id; }
 
   public slots:
-    virtual void updateTexture() =0;
+    virtual void resizeTexture(Layout* layout) =0;
+    virtual void updateTexture(const State& state) =0;
     virtual void clearTexture() =0;
 
   protected:
     inline const GLuint&  fboId()   const { return _fbo_id; }
 
-    void clear(float r, float g, float b, float a);
+    void clear(float r, float g, float b, float a, float d);
     virtual void resize(const QSize& size);
 
   private:

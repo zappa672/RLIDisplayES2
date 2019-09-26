@@ -8,8 +8,8 @@ using namespace RLI;
 
 MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
 
-  _state.peleng_count = qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt();
-  _state.peleng_length = qApp->property(PROPERTY_PELENG_SIZE).toInt();
+  _state.peleng_count = static_cast<uint>(qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt());
+  _state.peleng_length = static_cast<uint>(qApp->property(PROPERTY_PELENG_SIZE).toInt());
 
   _ds_radar = new RadarDataSource(this);
   _ds_radar->start();
@@ -30,7 +30,7 @@ MainWidget::~MainWidget() {
 
 
 void MainWidget::timerEvent(QTimerEvent*) {
-  _radarLayer->updateTexture();
+  _radarLayer->updateTexture(_state);
 
   update();
 }
@@ -48,6 +48,10 @@ void MainWidget::initializeGL() {
   initProgram();
 
   _radarLayer = new RadarEngine(_state, _layout_manager.layout(), context(), this);
+
+  connect( _ds_radar, SIGNAL(updateRadarData(uint, uint, GLfloat*))
+         , _radarLayer, SLOT(updateData(uint, uint, GLfloat*))
+         , Qt::QueuedConnection );
 
   _timerId = startTimer(33, Qt::CoarseTimer);
 }
@@ -76,10 +80,9 @@ void MainWidget::paintGL() {
   glBlendEquation(GL_FUNC_ADD);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
   glViewport(0, 0, width(), height());
 
-  glClearColor(0.3f, 0.5f, 0.4f, 1.f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
   Layout* layout = _layout_manager.layout();

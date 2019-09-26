@@ -20,10 +20,13 @@ FboLayerBase::~FboLayerBase() {
 }
 
 
-void FboLayerBase::clear(float r, float g, float b, float a) {
+void FboLayerBase::clear(float r, float g, float b, float a, float d) {
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+
   glBindFramebuffer(GL_FRAMEBUFFER, _fbo_id);
 
-  glClearDepthf(0.f);
+  glClearDepthf(d);
   glClearColor(r, g, b, a);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -64,5 +67,5 @@ void FboLayerBase::resize(const QSize& size) {
 
   _fbo_size = size;
 
-  clear(1.0f, 1.0f, 1.0f, 0.0f);
+  clear(1.0f, 1.0f, 1.0f, 0.0f, 0.0f);
 }

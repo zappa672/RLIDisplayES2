@@ -21,8 +21,8 @@ namespace RLI {
     void stop();
 
   signals:
-    void updateRadarData(int offset, int count, GLfloat* amps);
-    void updateTrailData(int offset, int count, GLfloat* amps);
+    void updateRadarData(uint offset, uint count, GLfloat* amps);
+    void updateTrailData(uint offset, uint count, GLfloat* amps);
 
   protected slots:
     void timerEvent(QTimerEvent* e);
@@ -43,13 +43,13 @@ namespace RLI {
     GLfloat* file_amps2[2];
 
     int _timer_period;
-    int _blocks_to_send;
+    uint _blocks_to_send;
 
-    int _file = 0;
-    int _offset = 0;
+    uint _file = 0;
+    uint _offset = 0;
 
-    int _peleng_size;
-    int _bearings_per_cycle;
+    uint _peleng_size;
+    uint _bearings_per_cycle;
   };
 
 }

@@ -74,13 +74,11 @@ void MainWidget::paintGL() {
 
   updateLayers();
   paintLayers();
-
+  glFlush();
 }
 
 void MainWidget::updateLayers() {
   _radarLayer->updateTexture(_state);
-
-  glFlush();
 }
 
 void MainWidget::paintLayers() {
@@ -98,8 +96,6 @@ void MainWidget::paintLayers() {
   Layout* layout = _layout_manager.layout();
 
   drawRect(layout->circle.box_rect, _radarLayer->textureId());
-
-  glFlush();
 }
 
 void MainWidget::initProgram() {

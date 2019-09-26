@@ -72,7 +72,6 @@ void RadarEngine::resizeData(const State& state) {
   _has_data = false;
 
   initBuffers();
-  clearData();
 }
 
 void RadarEngine::initBuffers() {
@@ -95,6 +94,14 @@ void RadarEngine::initBuffers() {
     _indices.push_back(last);
     _indices.push_back((last+1)%total);
   }
+
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), _positions.data(), GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ind_vbo_id);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2*_peleng_count*(_peleng_len+1)*sizeof(GLuint), _indices.data(), GL_STATIC_DRAW);
+
+  clearData();
 }
 
 void RadarEngine::resizeTexture(Layout* layout) {
@@ -102,22 +109,13 @@ void RadarEngine::resizeTexture(Layout* layout) {
 }
 
 void RadarEngine::clearData() {
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
-  glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), _positions.data(), GL_STATIC_DRAW);
-
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
   glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), nullptr, GL_DYNAMIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ind_vbo_id);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2*_peleng_count*(_peleng_len+1)*sizeof(GLuint), _indices.data(), GL_STATIC_DRAW);
 
   _draw_circle       = false;
   _has_data          = false;
   _last_drawn_peleng = _peleng_count - 1;
   _last_added_peleng = _peleng_count - 1;
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void RadarEngine::updateData(int offset, int count, GLfloat* amps) {

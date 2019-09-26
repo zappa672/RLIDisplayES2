@@ -12,7 +12,7 @@
 
 #include "datasources/radardatasource.h"
 
-#include "layers/fbolayerbase.h"
+#include "layers/radar/radarengine.h"
 
 namespace RLI {
 
@@ -41,21 +41,13 @@ namespace RLI {
     LayoutManager _layout_manager  { "layouts.xml" };
 
     RadarDataSource* _ds_radar;
-
     \
-    FboLayerBase* _layer;
-
-
+    RadarEngine* _radarLayer;
 
     QMatrix4x4 _projection;
-
     QOpenGLShaderProgram* _program;
-
-    enum { ATTR_POSITION = 0, ATTR_TEXCOORD = 1, ATTR_COUNT = 2 } ;
-    enum { UNIF_TEXTURE = 0, UNIF_MVPMATRIX = 1, UNIF_COUNT = 2 } ;
-
+    enum { ATTR_POSITION = 0, ATTR_TEXCOORD = 1, ATTR_COUNT = 2 } ;    
     GLuint _vbo_ids[ATTR_COUNT];
-    GLint _unif_locs[UNIF_COUNT];
     GLuint _attr_locs[ATTR_COUNT];
   };
 

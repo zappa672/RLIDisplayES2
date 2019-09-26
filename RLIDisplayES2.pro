@@ -27,6 +27,8 @@ SOURCES += \
   src/common/layout.cpp \
   src/common/math.cpp \
   src/common/state.cpp \
+  src/layers/radar/radarengine.cpp \
+  src/layers/radar/radarpalette.cpp \
   src/main.cpp \
   src/mainwidget.cpp \
   src/datasources/radardatasource.cpp \
@@ -37,6 +39,8 @@ HEADERS += \
   src/common/layout.h \
   src/common/math.h \
   src/common/state.h \
+  src/layers/radar/radarengine.h \
+  src/layers/radar/radarpalette.h \
   src/mainwidget.h \
   src/common/properties.h \
   src/datasources/radardatasource.h \  

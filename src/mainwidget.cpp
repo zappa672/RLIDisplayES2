@@ -1,8 +1,15 @@
 #include "mainwidget.h"
 
+#include "common/properties.h"
+
+#include <QApplication>
+
 using namespace RLI;
 
 MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
+
+  _state.peleng_count = qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt();
+  _state.peleng_length = qApp->property(PROPERTY_PELENG_SIZE).toInt();
 
   _ds_radar = new RadarDataSource(this);
   _ds_radar->start();
@@ -17,13 +24,13 @@ MainWidget::~MainWidget() {
     return;
 
   killTimer(_timerId);
-  delete _layer;
+  delete _radarLayer;
   delete _program;
 }
 
 
 void MainWidget::timerEvent(QTimerEvent*) {
-  _layer->update();
+  _radarLayer->updateTexture();
 
   update();
 }
@@ -40,7 +47,7 @@ void MainWidget::initializeGL() {
   _program = new QOpenGLShaderProgram(this);
   initProgram();
 
-  _layer = new FboLayerBase(QSize(256, 256), context(), this);
+  _radarLayer = new RadarEngine(_state, _layout_manager.layout(), context(), this);
 
   _timerId = startTimer(33, Qt::CoarseTimer);
 }
@@ -56,7 +63,7 @@ void MainWidget::resizeGL(int w, int h) {
 
   Layout* layout = _layout_manager.layout();
 
-  _layer->resize(layout->circle.box_rect.size());
+  _radarLayer->resizeTexture(layout);
 }
 
 void MainWidget::paintGL() {
@@ -77,7 +84,7 @@ void MainWidget::paintGL() {
 
   Layout* layout = _layout_manager.layout();
 
-  drawRect(layout->circle.box_rect, _layer->textureId());
+  drawRect(layout->circle.box_rect, _radarLayer->textureId());
 
   glFlush();
 }
@@ -107,9 +114,6 @@ void main() { \
 
   GLuint id = _program->programId();
 
-  _unif_locs[UNIF_TEXTURE]    = glGetUniformLocation(id, "texture");
-  _unif_locs[UNIF_MVPMATRIX]  = glGetUniformLocation(id, "mvp_matrix");
-
   _attr_locs[ATTR_POSITION]   = static_cast<GLuint>(glGetAttribLocation(id, "position"));
   _attr_locs[ATTR_TEXCOORD]   = static_cast<GLuint>(glGetAttribLocation(id, "texcoord"));
 
@@ -136,8 +140,8 @@ void MainWidget::drawRect(const QRectF& rect, GLuint textureId) {
   transform.setToIdentity();
   transform.translate( 0.f, 0.f, 0.f );
 
-  glUniform1f(_unif_locs[UNIF_TEXTURE], 0);
-  _program->setUniformValue(_unif_locs[UNIF_MVPMATRIX], _projection*transform);
+  _program->setUniformValue("texture", 0);
+  _program->setUniformValue("mvp_matrix", _projection*transform);
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);

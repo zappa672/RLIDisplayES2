@@ -50,10 +50,14 @@ void RadarDataSource::stop() {
 void RadarDataSource::timerEvent(QTimerEvent* e) {
   Q_UNUSED(e)
 
+  /*
   QtConcurrent::run([&](int offset, int file) {
     emit updateRadarData(offset, _blocks_to_send, &file_amps1[file][offset * _peleng_size]);
     emit updateTrailData(offset, _blocks_to_send, &file_amps2[file][offset * _peleng_size]);
   }, _offset, _file);
+  */
+  updateRadarData(_offset, _blocks_to_send, &file_amps1[_file][_offset * _peleng_size]);
+  updateTrailData(_offset, _blocks_to_send, &file_amps2[_file][_offset * _peleng_size]);
 
   _offset = (_offset + _blocks_to_send) % _bearings_per_cycle;
   if (_offset == 0) _file = 1 - _file;

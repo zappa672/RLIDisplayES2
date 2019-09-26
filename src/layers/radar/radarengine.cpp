@@ -75,8 +75,8 @@ void RadarEngine::resizeData(const State& state) {
 }
 
 void RadarEngine::initBuffers() {
-  _positions.clear();
-  _indices.clear();
+  std::vector<GLuint> indices;
+  std::vector<GLfloat> positions;
 
   GLuint total = _peleng_count*_peleng_len;
 
@@ -85,21 +85,21 @@ void RadarEngine::initBuffers() {
       GLuint curr_index = index*_peleng_len + radius;
       GLuint prev_index = ((index-1)*_peleng_len + radius + total) % total;
 
-      _positions.push_back(curr_index);
-      _indices.push_back(curr_index);
-      _indices.push_back(prev_index);
+      positions.push_back(curr_index);
+      indices.push_back(curr_index);
+      indices.push_back(prev_index);
     }
 
-    GLuint last = _indices[_indices.size()-1];
-    _indices.push_back(last);
-    _indices.push_back((last+1)%total);
+    GLuint last = indices[indices.size()-1];
+    indices.push_back(last);
+    indices.push_back((last+1)%total);
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
-  glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), _positions.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), positions.data(), GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ind_vbo_id);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2*_peleng_count*(_peleng_len+1)*sizeof(GLuint), _indices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2*_peleng_count*(_peleng_len+1)*sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
   clearData();
 }
@@ -119,6 +119,8 @@ void RadarEngine::clearData() {
 }
 
 void RadarEngine::updateData(int offset, int count, GLfloat* amps) {
+  qDebug() << "recieve " << offset << count;
+
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
   glBufferSubData(GL_ARRAY_BUFFER, offset*_peleng_len*sizeof(GLfloat), count*_peleng_len*sizeof(GLfloat), amps);
 
@@ -159,6 +161,7 @@ void RadarEngine::updateTexture(const State& state) {
     first_peleng_to_draw = (_last_added_peleng + 1) % _peleng_count;
   // --------------------------------------
 
+  qDebug() << "draw " << first_peleng_to_draw << last_peleng_to_draw;
 
   // --------------------------------------
 

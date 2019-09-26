@@ -48,9 +48,6 @@ namespace RLI {
 
     void drawPelengs(int first, int last);
 
-    std::vector<GLuint> _indices;
-    std::vector<GLfloat> _positions;
-
     // OpenGL vars
     QOpenGLShaderProgram* _program;
 

@@ -72,8 +72,8 @@ namespace RLI {
     bool    show_parallel     { false };
 
     // Radar parameters
-    uint peleng_length   { 800 };
-    uint peleng_count    { 4096 };
+    int peleng_length   { 800 };
+    int peleng_count    { 4096 };
 
     // Magnifier parameters
     int magn_min_rad    { 96 };

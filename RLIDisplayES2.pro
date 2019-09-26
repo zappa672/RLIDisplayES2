@@ -55,3 +55,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
   layouts.xml
+
+RESOURCES += \
+  res/shaders.qrc

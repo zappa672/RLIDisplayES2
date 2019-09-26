@@ -17,14 +17,13 @@ int main(int argc, char *argv[]) {
   qDebug() << "Max number of threads: " << QThreadPool::globalInstance()->maxThreadCount();
 
   QApplication a(argc, argv);
+  parseArgs(a);
 
   QGLFormat format = QGLFormat::defaultFormat();
   format.setDoubleBuffer(true);
   format.setSampleBuffers(false);
   format.setSamples(1);
   QGLFormat::setDefaultFormat(format);
-
-  parseArgs(a);
 
   RLI::MainWidget w;
   w.showFullScreen();

@@ -8,8 +8,8 @@ using namespace RLI;
 
 MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
 
-  _state.peleng_count = static_cast<uint>(qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt());
-  _state.peleng_length = static_cast<uint>(qApp->property(PROPERTY_PELENG_SIZE).toInt());
+  _state.peleng_count = qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt();
+  _state.peleng_length = qApp->property(PROPERTY_PELENG_SIZE).toInt();
 
   _ds_radar = new RadarDataSource(this);
   _ds_radar->start();
@@ -30,8 +30,6 @@ MainWidget::~MainWidget() {
 
 
 void MainWidget::timerEvent(QTimerEvent*) {
-  _radarLayer->updateTexture(_state);
-
   update();
 }
 
@@ -49,8 +47,8 @@ void MainWidget::initializeGL() {
 
   _radarLayer = new RadarEngine(_state, _layout_manager.layout(), context(), this);
 
-  connect( _ds_radar, SIGNAL(updateRadarData(uint, uint, GLfloat*))
-         , _radarLayer, SLOT(updateData(uint, uint, GLfloat*))
+  connect( _ds_radar, SIGNAL(updateRadarData(int, int, GLfloat*))
+         , _radarLayer, SLOT(updateData(int, int, GLfloat*))
          , Qt::QueuedConnection );
 
   _timerId = startTimer(33, Qt::CoarseTimer);
@@ -74,6 +72,18 @@ void MainWidget::paintGL() {
   if (_timerId == -1)
     return;
 
+  updateLayers();
+  paintLayers();
+
+}
+
+void MainWidget::updateLayers() {
+  _radarLayer->updateTexture(_state);
+
+  glFlush();
+}
+
+void MainWidget::paintLayers() {
   glEnable(GL_BLEND);
   glDisable(GL_DEPTH_TEST);
 
@@ -93,24 +103,8 @@ void MainWidget::paintGL() {
 }
 
 void MainWidget::initProgram() {
-  _program->addShaderFromSourceCode(QOpenGLShader::Vertex,
-"uniform mat4 mvp_matrix; \
-attribute vec2 position; \
-attribute vec2 texcoord; \
-varying vec2 v_texcoord; \
- \
-void main() { \
-  gl_Position = mvp_matrix * vec4(position, 0.0, 1.0); \
-  v_texcoord = texcoord; \
-}");
-
-  _program->addShaderFromSourceCode(QOpenGLShader::Fragment,
-"uniform sampler2D texture; \
-varying vec2 v_texcoord; \
- \
-void main() { \
-  gl_FragColor = texture2D(texture, v_texcoord); \
-}");
+  _program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/main.vert.glsl");
+  _program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/main.frag.glsl");
 
   _program->link();
   _program->bind();
@@ -141,7 +135,6 @@ void MainWidget::drawRect(const QRectF& rect, GLuint textureId) {
 
   QMatrix4x4 transform;
   transform.setToIdentity();
-  transform.translate( 0.f, 0.f, 0.f );
 
   _program->setUniformValue("texture", 0);
   _program->setUniformValue("mvp_matrix", _projection*transform);

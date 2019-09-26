@@ -31,6 +31,9 @@ namespace RLI {
     void paintGL() override;
 
   private:
+    void updateLayers();
+    void paintLayers();
+
     void initProgram();
 
     void drawRect(const QRectF& rect, GLuint textureId);

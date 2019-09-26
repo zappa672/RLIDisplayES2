@@ -12,15 +12,11 @@
 
 using namespace RLI;
 
-
-
 RadarDataSource::RadarDataSource(QObject* parent) : QObject(parent) {
-  //finish_flag = true;
-
   _timer_period        = qApp->property(PROPERTY_DATA_DELAY).toInt();
-  _blocks_to_send      = static_cast<uint>(qApp->property(PROPERTY_BLOCK_SIZE).toInt());
-  _peleng_size         = static_cast<uint>(qApp->property(PROPERTY_PELENG_SIZE).toInt());
-  _bearings_per_cycle  = static_cast<uint>(qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt());
+  _blocks_to_send      = qApp->property(PROPERTY_BLOCK_SIZE).toInt();
+  _peleng_size         = qApp->property(PROPERTY_PELENG_SIZE).toInt();
+  _bearings_per_cycle  = qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt();
 
   file_amps1[0] = new GLfloat[_peleng_size*_bearings_per_cycle];
   file_amps1[1] = new GLfloat[_peleng_size*_bearings_per_cycle];
@@ -54,7 +50,7 @@ void RadarDataSource::stop() {
 void RadarDataSource::timerEvent(QTimerEvent* e) {
   Q_UNUSED(e)
 
-  QtConcurrent::run([&](uint offset, uint file) {
+  QtConcurrent::run([&](int offset, int file) {
     emit updateRadarData(offset, _blocks_to_send, &file_amps1[file][offset * _peleng_size]);
     emit updateTrailData(offset, _blocks_to_send, &file_amps2[file][offset * _peleng_size]);
   }, _offset, _file);
@@ -82,8 +78,8 @@ bool RadarDataSource::loadData() {
 }
 
 bool RadarDataSource::initWithDummy1(GLfloat* amps) {
-  for (uint i = 0; i < _bearings_per_cycle; i++)
-    for (uint j = 0; j < _peleng_size; j++)
+  for (int i = 0; i < _bearings_per_cycle; i++)
+    for (int j = 0; j < _peleng_size; j++)
       if (i % 256 < 9 || i % 256 > 247)
         amps[i*_peleng_size+j] = (255.f * j) / _peleng_size;
       else
@@ -93,8 +89,8 @@ bool RadarDataSource::initWithDummy1(GLfloat* amps) {
 }
 
 bool RadarDataSource::initWithDummy2(GLfloat* amps) {
-  for (uint i = 0; i < _bearings_per_cycle; i++)
-    for (uint j = 0; j < _peleng_size; j++)
+  for (int i = 0; i < _bearings_per_cycle; i++)
+    for (int j = 0; j < _peleng_size; j++)
       if (j > 259 && j < 268)
         amps[i*_peleng_size+j] = 255.f - (255.f * i) / _bearings_per_cycle;
       else
@@ -104,8 +100,8 @@ bool RadarDataSource::initWithDummy2(GLfloat* amps) {
 }
 
 bool RadarDataSource::initWithDummy3(GLfloat* amps) {
-  for (uint i = 0; i < _bearings_per_cycle; i++)
-    for (uint j = 0; j < _peleng_size; j++)
+  for (int i = 0; i < _bearings_per_cycle; i++)
+    for (int j = 0; j < _peleng_size; j++)
       if (i % 256 < 137 && i % 256 > 121)
         amps[i*_peleng_size+j] = (255.f * j) / _peleng_size;
       else
@@ -115,8 +111,8 @@ bool RadarDataSource::initWithDummy3(GLfloat* amps) {
 }
 
 bool RadarDataSource::initWithDummy4(GLfloat* amps) {
-  for (uint i = 0; i < _bearings_per_cycle; i++)
-    for (uint j = 0; j < _peleng_size; j++)
+  for (int i = 0; i < _bearings_per_cycle; i++)
+    for (int j = 0; j < _peleng_size; j++)
       if (j > 131 && j < 140)
         amps[i*_peleng_size+j] = 255.f - (255.f * i) / _bearings_per_cycle;
       else

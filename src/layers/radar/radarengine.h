@@ -1,7 +1,7 @@
 #ifndef RADARENGINE_H
 #define RADARENGINE_H
 
-#include <climits>
+#include <vector>
 
 #include <QTime>
 #include <QColor>
@@ -37,7 +37,7 @@ namespace RLI {
     void clearTexture() override;
 
     void resizeData(const State& state);
-    void updateData(uint offset, uint count, GLfloat* amps);
+    void updateData(int offset, int count, GLfloat* amps);
     void clearData();
 
   private:
@@ -46,21 +46,35 @@ namespace RLI {
     void initShader();
     void initBuffers();
 
-    void drawPelengs(uint first, uint last);
+    void drawPelengs(int first, int last);
+
+    std::vector<GLuint> _indices;
+    std::vector<GLfloat> _positions;
 
     // OpenGL vars
     QOpenGLShaderProgram* _program;
+
     enum { ATTR_POSITION = 0, ATTR_AMPLITUDE = 1, ATTR_COUNT = 2 } ;
+    enum { UNIF_MVP_MATRIX    = 0
+         , UNIF_TEXTURE       = 1
+         , UNIF_THREASHOLD    = 2
+         , UNIF_PELENG_LENGTH = 3
+         , UNIF_PELENG_COUNT  = 4
+         , UNIF_FBO_RADIUS    = 5
+         , UNIF_NORTH_SHIFT   = 6
+         , UNIF_COUNT         = 7 } ;
+
     GLuint _vbo_ids[ATTR_COUNT];
-    GLuint _attr_locs[ATTR_COUNT];
+    int _attr_locs[ATTR_COUNT];
+    int _unif_locs[UNIF_COUNT];
     GLuint _ind_vbo_id;
 
-    uint _peleng_count = 0;
-    uint _peleng_len   = 0;
+    int _peleng_count = 0;
+    int _peleng_len   = 0;
 
     bool  _draw_circle;
-    uint  _last_drawn_peleng;
-    uint  _last_added_peleng;
+    int  _last_drawn_peleng;
+    int  _last_added_peleng;
     QPoint _center_shift { 0, 0 };
 
     // Palette

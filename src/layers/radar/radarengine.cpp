@@ -33,7 +33,7 @@ RadarEngine::~RadarEngine() {
 }
 
 void RadarEngine::clearTexture() {
-  FboLayerBase::clear(1.f, 1.f, 1.f, 1.f, 0.f);
+  FboLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
 }
 
 void RadarEngine::onBrightnessChanged(int br) {
@@ -41,54 +41,19 @@ void RadarEngine::onBrightnessChanged(int br) {
 }
 
 void RadarEngine::initShader() {
-  _program->addShaderFromSourceCode(QOpenGLShader::Vertex,
-"uniform mat4 mvp_matrix; \
-\
-attribute float position; \
-attribute float amplitude; \
- \
-uniform float peleng_length; \
-uniform float peleng_count; \
-uniform float north_shift; \
- \
-varying float v_amp; \
- \
-void main() { \
-  float peleng_index = floor(position / peleng_length); \
-  float radius = mod(position, peleng_length); \
- \
-  float angle = radians(mod(north_shift + (360.0 * peleng_index) / peleng_count, 360.0)); \
- \
-  float x =  radius * sin(angle); \
-  float y = -radius * cos(angle); \
- \
-  gl_Position = mvp_matrix * vec4(x, y, -amplitude, 1.0); \
-  if (length(gl_Position.xy) > 1.005) \
-    gl_Position = vec4(0.0, 0.0, 0.0, 0.0); \
-  v_amp = amplitude; \
-}");
-
-  _program->addShaderFromSourceCode(QOpenGLShader::Fragment,
-"uniform sampler2D texture; \
- \
-uniform float threashold; \
-uniform float fbo_radius; \
- \
-varying float v_amp; \
- \
-void main() { \
-  if (length(gl_FragCoord.xy - vec2(fbo_radius, fbo_radius)) > fbo_radius) \
-    discard; \
- \
-  if (v_amp >= threashold) { \
-    gl_FragColor = texture2D(texture, vec2(0.0, v_amp / 255.0)); \
-  } else { \
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0); \
-  } \
-}");
+  _program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/radar.vert.glsl");
+  _program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/radar.frag.glsl");
 
   _program->link();
   _program->bind();
+
+  _unif_locs[UNIF_MVP_MATRIX]     = _program->uniformLocation("mvp_matrix");
+  _unif_locs[UNIF_TEXTURE]        = _program->uniformLocation("texture");
+  _unif_locs[UNIF_THREASHOLD]     = _program->uniformLocation("threashold");
+  _unif_locs[UNIF_PELENG_LENGTH]  = _program->uniformLocation("peleng_length");
+  _unif_locs[UNIF_PELENG_COUNT]   = _program->uniformLocation("peleng_count");
+  _unif_locs[UNIF_FBO_RADIUS]     = _program->uniformLocation("fbo_radius");
+  _unif_locs[UNIF_NORTH_SHIFT]    = _program->uniformLocation("north_shift");
 
   _attr_locs[ATTR_POSITION]       = _program->attributeLocation("position");
   _attr_locs[ATTR_AMPLITUDE]      = _program->attributeLocation("amplitude");
@@ -107,38 +72,29 @@ void RadarEngine::resizeData(const State& state) {
   _has_data = false;
 
   initBuffers();
+  clearData();
 }
 
 void RadarEngine::initBuffers() {
-  std::vector<GLuint> indices;
-  std::vector<GLfloat> positions;
+  _positions.clear();
+  _indices.clear();
 
   GLuint total = _peleng_count*_peleng_len;
 
-  for (GLuint index = 0; index < _peleng_count; index++) {
-    for (GLuint radius = 0; radius < _peleng_len; radius++) {
+  for (int index = 0; index < _peleng_count; index++) {
+    for (int radius = 0; radius < _peleng_len; radius++) {
       GLuint curr_index = index*_peleng_len + radius;
       GLuint prev_index = ((index-1)*_peleng_len + radius + total) % total;
 
-      positions.push_back(curr_index);
-      indices.push_back(curr_index);
-      indices.push_back(prev_index);
+      _positions.push_back(curr_index);
+      _indices.push_back(curr_index);
+      _indices.push_back(prev_index);
     }
 
-    GLuint last = indices[indices.size()-1];
-    indices.push_back(last);
-    indices.push_back((last+1)%total);
+    GLuint last = _indices[_indices.size()-1];
+    _indices.push_back(last);
+    _indices.push_back((last+1)%total);
   }
-
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
-  glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), positions.data(), GL_STATIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ind_vbo_id);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2*_peleng_count*(_peleng_len+1)*sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-  clearData();
 }
 
 void RadarEngine::resizeTexture(Layout* layout) {
@@ -146,17 +102,30 @@ void RadarEngine::resizeTexture(Layout* layout) {
 }
 
 void RadarEngine::clearData() {
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), _positions.data(), GL_STATIC_DRAW);
+
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
   glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), nullptr, GL_DYNAMIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ind_vbo_id);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 2*_peleng_count*(_peleng_len+1)*sizeof(GLuint), _indices.data(), GL_STATIC_DRAW);
+
+  _draw_circle       = false;
+  _has_data          = false;
+  _last_drawn_peleng = _peleng_count - 1;
+  _last_added_peleng = _peleng_count - 1;
+
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void RadarEngine::updateData(uint offset, uint count, GLfloat* amps) {
+void RadarEngine::updateData(int offset, int count, GLfloat* amps) {
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
   glBufferSubData(GL_ARRAY_BUFFER, offset*_peleng_len*sizeof(GLfloat), count*_peleng_len*sizeof(GLfloat), amps);
 
   // New last added peleng
-  uint nlap = (offset + count - 1) % _peleng_count;
+  int nlap = (offset + count - 1) % _peleng_count;
 
   // If we recieved full circle after last draw
   _draw_circle = (_last_added_peleng < _last_drawn_peleng && nlap >= _last_drawn_peleng) || count == _peleng_len;
@@ -170,7 +139,6 @@ void RadarEngine::updateData(uint offset, uint count, GLfloat* amps) {
 }
 
 void RadarEngine::updateTexture(const State& state) {
-
   if (!_has_data) {
     clearTexture();
     return;
@@ -186,8 +154,8 @@ void RadarEngine::updateTexture(const State& state) {
   if (_last_added_peleng == _last_drawn_peleng && !_draw_circle)
     return;
 
-  uint first_peleng_to_draw = (_last_drawn_peleng + 1) % _peleng_count;
-  uint last_peleng_to_draw = _last_added_peleng % _peleng_count;
+  int first_peleng_to_draw = (_last_drawn_peleng + 1) % _peleng_count;
+  int last_peleng_to_draw = _last_added_peleng % _peleng_count;
 
   if (_draw_circle)
     first_peleng_to_draw = (_last_added_peleng + 1) % _peleng_count;
@@ -200,19 +168,19 @@ void RadarEngine::updateTexture(const State& state) {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
 
-  QSize fboSize = size();
-  glViewport(0.f, 0.f, fboSize.width(), fboSize.height());
+  QSize sz = FboLayerBase::size();
+  glViewport(0.f, 0.f, sz.width(), sz.height());
 
   glBindFramebuffer(GL_FRAMEBUFFER, fboId());
 
   QMatrix4x4 projection;
   projection.setToIdentity();
-  projection.ortho(0.f, fboSize.width(), 0.f, fboSize.height(), -255.f, 255.f);
+  projection.ortho(0.f, sz.width(), 0.f, sz.height(), -255.f, 255.f);
 
   QMatrix4x4 transform;
   transform.setToIdentity();
-  transform.translate( fboSize.width() / 2.f + static_cast<float>(_center_shift.x())
-                     , fboSize.height() / 2.f + static_cast<float>(_center_shift.y())
+  transform.translate( sz.width() / 2.f + static_cast<float>(_center_shift.x())
+                     , sz.height() / 2.f + static_cast<float>(_center_shift.y())
                      , 0.f);
 
   _program->bind();
@@ -220,14 +188,14 @@ void RadarEngine::updateTexture(const State& state) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, _palette->texture());
 
-  _program->setUniformValue("texture", 0);
-  _program->setUniformValue("mvp_matrix", projection*transform);
-  _program->setUniformValue("threashold", 1.f);
+  glUniform1i(_unif_locs[UNIF_TEXTURE], 0);
+  _program->setUniformValue(_unif_locs[UNIF_MVP_MATRIX], projection*transform);
+  glUniform1f(_unif_locs[UNIF_THREASHOLD], 1.f);
 
-  _program->setUniformValue("peleng_length", static_cast<float>(_peleng_len));
-  _program->setUniformValue("peleng_count", static_cast<float>(_peleng_count));
-  _program->setUniformValue("fbo_radius", fboSize.width() / 2.f);
-  _program->setUniformValue("north_shift", static_cast<float>(state.north_shift));
+  glUniform1f(_unif_locs[UNIF_PELENG_LENGTH], _peleng_len);
+  glUniform1f(_unif_locs[UNIF_PELENG_COUNT], _peleng_count);
+  glUniform1f(_unif_locs[UNIF_FBO_RADIUS], sz.width() / 2.f);
+  glUniform1f(_unif_locs[UNIF_NORTH_SHIFT], static_cast<float>(state.north_shift));
 
   if (first_peleng_to_draw <= last_peleng_to_draw) {
     drawPelengs(first_peleng_to_draw, last_peleng_to_draw);
@@ -246,7 +214,7 @@ void RadarEngine::updateTexture(const State& state) {
   _draw_circle = false;
 }
 
-void RadarEngine::drawPelengs(uint first, uint last) {
+void RadarEngine::drawPelengs(int first, int last) {
   // Clear depth when the new cycle begins to avoid the previous circle data
   if (first == 0) {
     glClearDepthf(0.f);
@@ -267,7 +235,7 @@ void RadarEngine::drawPelengs(uint first, uint last) {
   glDrawElements( GL_TRIANGLE_STRIP
                 , (last-first+1)*(2*_peleng_len+2)
                 , GL_UNSIGNED_INT
-                , (const GLvoid*) (first*(2*_peleng_len+2) * sizeof(GLuint)));
+                , (const GLvoid*)(first*(2*_peleng_len+2) * sizeof(GLuint)));
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

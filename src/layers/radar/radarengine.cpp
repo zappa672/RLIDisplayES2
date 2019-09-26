@@ -33,7 +33,7 @@ RadarEngine::~RadarEngine() {
 }
 
 void RadarEngine::clearTexture() {
-  FboLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
+  FboLayerBase::clear(1.f, 1.f, 1.f, 1.f, 0.f);
 }
 
 void RadarEngine::onBrightnessChanged(int br) {

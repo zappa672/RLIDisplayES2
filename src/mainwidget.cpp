@@ -61,7 +61,20 @@ void MainWidget::initializeGL() {
 }
 
 void MainWidget::resizeGL(int w, int h) {
+  if (_timerId == -1)
+    return;
+
+  QSize curr_size = _layout_manager.size();
   _layout_manager.resize(QSize(w, h));
+  QSize new_size = _layout_manager.size();
+
+  if (new_size.width() <= 0 || new_size.height() <= 0) {
+    qDebug() << "Can not find suitable size for RLIDisplayWidget";
+    return;
+  }
+
+  if (curr_size == new_size)
+    return;
 
   _projection.setToIdentity();
   _projection.ortho(geometry());

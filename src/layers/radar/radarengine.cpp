@@ -37,13 +37,7 @@ void RadarEngine::clearTexture() {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_ALWAYS);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, fboId());
-
-  glClearDepthf(0.f);
-  glClearColor(1.f, 1.f, 1.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  FboLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
 }
 
 void RadarEngine::onBrightnessChanged(int br) {
@@ -129,8 +123,6 @@ void RadarEngine::clearData() {
 }
 
 void RadarEngine::updateData(int offset, int count, GLfloat* amps) {
-  qDebug() << "recieve " << offset << count;
-
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
   glBufferSubData(GL_ARRAY_BUFFER, offset*_peleng_len*sizeof(GLfloat), count*_peleng_len*sizeof(GLfloat), amps);
 
@@ -171,10 +163,7 @@ void RadarEngine::updateTexture(const State& state) {
     first_peleng_to_draw = (_last_added_peleng + 1) % _peleng_count;
   // --------------------------------------
 
-  qDebug() << "draw " << first_peleng_to_draw << last_peleng_to_draw;
-
   // --------------------------------------
-
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);

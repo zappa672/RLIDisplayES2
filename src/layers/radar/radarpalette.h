@@ -17,7 +17,7 @@ namespace RLI {
     void setRgbVar(int var);
     void setBrightness(int br);
 
-    inline GLuint texture() { return tex->textureId(); }
+    inline GLuint texture() { return _tex_id; }
 
   private:
     // Расчёт зависимости RGBкодов цвета от амплитуды входного сигнала
@@ -25,10 +25,10 @@ namespace RLI {
 
     // Параметры:
     int rgbRLI_Var;         //Текущая палитра (день/ночь)
-    int brightnessRLI;      //Яркость РЛИ 0..255
+    int brightness;      //Яркость РЛИ 0..255
 
     // Текущая палитра
-    QOpenGLTexture* tex;
+    GLuint _tex_id;
   };
 
 }

@@ -4,6 +4,7 @@
 
 #include <QPixmap>
 #include <QImage>
+#include <QGLWidget>
 
 using namespace RLI;
 
@@ -23,20 +24,24 @@ RadarPalette::RadarPalette(QOpenGLContext* context, QObject* parent) : QObject(p
   initializeOpenGLFunctions();
 
   rgbRLI_Var = 0;
-  brightnessRLI = 255;
+  brightness = 255;
 
-  tex = new QOpenGLTexture(QOpenGLTexture::Target2D);
+  glGenTextures(1, &_tex_id);
 
-  tex->setMipLevels(1);
-  tex->setMinificationFilter(QOpenGLTexture::Nearest);
-  tex->setMagnificationFilter(QOpenGLTexture::Nearest);
-  tex->setWrapMode(QOpenGLTexture::ClampToEdge);
+  glBindTexture(GL_TEXTURE_2D, _tex_id);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glBindTexture(GL_TEXTURE_2D, 0);
 
   updatePalette();
 }
 
 RadarPalette::~RadarPalette() {
-  //delete tex;
+  glDeleteTextures(1, &_tex_id);
 }
 
 
@@ -53,7 +58,7 @@ void RadarPalette::setBrightness(int val) {
   if (val < 0 || val > 255)
     return;
 
-  brightnessRLI = val;
+  brightness = val;
   updatePalette();
 }
 
@@ -77,7 +82,7 @@ void RadarPalette::updatePalette() {
       {     0,      0,  50,  10,  50,  76,  24,  76, 160,  52, 160, 244,  80, 244,  60, 150,  60, 0       } }
     };
 
-  float br = brightnessRLI / 255.f; // Вычисление коэффициента яркости
+  float br = brightness / 255.f; // Вычисление коэффициента яркости
 
   // Расчёт цветового расстояния между точками на кривой преобразования амплитуды в цвет
   float kR[2][4], kG[2][4], kB[2][4];
@@ -126,6 +131,9 @@ void RadarPalette::updatePalette() {
   for (int i = 0; i < 16; i++)
     img.setPixel(0, i, qRgb(palette[i][0], palette[i][1], palette[i][2]));
 
-  tex->destroy();
-  tex->setData(img, QOpenGLTexture::DontGenerateMipMaps);
+  QImage imgGL = QGLWidget::convertToGLFormat(img);
+
+  glBindTexture(GL_TEXTURE_2D, _tex_id);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgGL.width(), imgGL.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, imgGL.bits());
+  glBindTexture(GL_TEXTURE_2D, 0);
 }

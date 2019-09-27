@@ -24,6 +24,7 @@ MainWidget::~MainWidget() {
     return;
 
   killTimer(_timerId);
+
   delete _radarLayer;
   delete _program;
 }
@@ -34,6 +35,9 @@ void MainWidget::timerEvent(QTimerEvent*) {
 }
 
 void MainWidget::initializeGL() {
+  if (_timerId != -1)
+    return;
+
   initializeOpenGLFunctions();
 
   glDisable(GL_STENCIL);
@@ -42,10 +46,12 @@ void MainWidget::initializeGL() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_TEXTURE_2D);
 
+  _radarLayer = new RadarEngine(_state, _layout_manager.layout(), context(), this);
+
+  glGenBuffers(ATTR_COUNT, _vbo_ids);
+
   _program = new QOpenGLShaderProgram(this);
   initProgram();
-
-  _radarLayer = new RadarEngine(_state, _layout_manager.layout(), context(), this);
 
   connect( _ds_radar, SIGNAL(updateRadarData(int, int, GLfloat*))
          , _radarLayer, SLOT(updateData(int, int, GLfloat*))

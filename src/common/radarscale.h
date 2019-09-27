@@ -1,7 +1,7 @@
 #ifndef RADARSCALE_H
 #define RADARSCALE_H
 
-//#include <stdint.h>
+#include <stdint.h>
 
 #include <utility>
 #include <sys/types.h>
@@ -29,9 +29,9 @@ namespace RLI {
   struct Scale {
     double          len;              // Length of this scale in miles; 0 means invalid scale
     SoundingPulses  sndpls;           // Type of sounding pulse
-    u_int32_t       pkidpkod;         // Settings for PKID and PKOD
-    u_int32_t       gen_addr;         // Value to set the address of ADC Frequency Register
-    u_int32_t       gen_dat;          // Value to set the contents of ADC Frequency Register
+    uint32_t        pkidpkod;         // Settings for PKID and PKOD
+    uint32_t        gen_addr;         // Value to set the address of ADC Frequency Register
+    uint32_t        gen_dat;          // Value to set the contents of ADC Frequency Register
     float           dist_rng;         // Space in miles between distance rings
     const char*     display;          // Name of the scale for displaying
     const char*     dist_rng_display; // How to display space size between distance rings

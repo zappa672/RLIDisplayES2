@@ -99,6 +99,12 @@ void RadarEngine::initBuffers() {
     indices.push_back((last+1)%total);
   }
 
+  qDebug() << "Init buffers";
+  qDebug() << _peleng_count*_peleng_len;
+  qDebug() << positions.size();
+  qDebug() << 2*_peleng_count*(_peleng_len+1);
+  qDebug() << indices.size();
+
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
   glBufferData(GL_ARRAY_BUFFER, _peleng_count*_peleng_len*sizeof(GLfloat), positions.data(), GL_STATIC_DRAW);
 
@@ -123,6 +129,10 @@ void RadarEngine::clearData() {
 }
 
 void RadarEngine::updateData(int offset, int count, GLfloat* amps) {
+  qDebug() << "updateData" << offset << count;
+  qDebug() << "offset*_peleng_len" << offset*_peleng_len;
+  qDebug() << "count*_peleng_len" << count*_peleng_len;
+
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
   glBufferSubData(GL_ARRAY_BUFFER, offset*_peleng_len*sizeof(GLfloat), count*_peleng_len*sizeof(GLfloat), amps);
 
@@ -138,6 +148,10 @@ void RadarEngine::updateData(int offset, int count, GLfloat* amps) {
     _last_added_peleng = offset % _peleng_count;
     _has_data = true;
   }
+
+  qDebug() << "drawCircle" << _draw_circle;
+  qDebug() << "_last_drawn_peleng" << _last_drawn_peleng;
+  qDebug() << "_last_added_peleng" << _last_added_peleng;
 }
 
 void RadarEngine::updateTexture(const State& state) {
@@ -215,6 +229,8 @@ void RadarEngine::updateTexture(const State& state) {
 }
 
 void RadarEngine::drawPelengs(int first, int last) {
+  qDebug() << "drawPelengs" << first << last;
+
   // Clear depth when the new cycle begins to avoid the previous circle data
   if (first == 0) {
     glClearDepthf(0.f);
@@ -230,6 +246,9 @@ void RadarEngine::drawPelengs(int first, int last) {
   glEnableVertexAttribArray(_attr_locs[ATTR_AMPLITUDE]);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ind_vbo_id);
+
+  qDebug() << "(last-first+1)*(2*_peleng_len+2)" << (last-first+1)*(2*_peleng_len+2);
+  qDebug() << "first*(2*_peleng_len+2)" << first*(2*_peleng_len+2);
 
   glDepthFunc(GL_GREATER);
   glDrawElements( GL_TRIANGLE_STRIP

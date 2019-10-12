@@ -8,7 +8,7 @@ using namespace RLI;
 
 MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
 
-  _state.peleng_count = qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt();
+  _state.peleng_count = qApp->property(PROPERTY_PELENG_COUNT).toInt();
   _state.peleng_length = qApp->property(PROPERTY_PELENG_SIZE).toInt();
 
   _ds_radar = new RadarDataSource(this);

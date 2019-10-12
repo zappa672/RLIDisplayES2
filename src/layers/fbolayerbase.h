@@ -2,7 +2,7 @@
 #define FBOLAYERBASE_H
 
 #include <QObject>
-#include <QOpenGLFunctions>
+#include <QOpenGLExtraFunctions>
 
 #include <QSize>
 
@@ -11,7 +11,7 @@
 
 namespace RLI {
 
-  class FboLayerBase : public QObject, protected QOpenGLFunctions {
+  class FboLayerBase : public QObject, protected QOpenGLExtraFunctions {
     Q_OBJECT
   public:
     FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent = nullptr);

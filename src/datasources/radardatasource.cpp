@@ -16,7 +16,7 @@ RadarDataSource::RadarDataSource(QObject* parent) : QObject(parent) {
   _timer_period        = qApp->property(PROPERTY_DATA_DELAY).toInt();
   _blocks_to_send      = qApp->property(PROPERTY_BLOCK_SIZE).toInt();
   _peleng_size         = qApp->property(PROPERTY_PELENG_SIZE).toInt();
-  _bearings_per_cycle  = qApp->property(PROPERTY_BEARINGS_PER_CYCLE).toInt();
+  _bearings_per_cycle  = qApp->property(PROPERTY_PELENG_COUNT).toInt();
 
   file_amps1[0] = new GLfloat[_peleng_size*_bearings_per_cycle];
   file_amps1[1] = new GLfloat[_peleng_size*_bearings_per_cycle];

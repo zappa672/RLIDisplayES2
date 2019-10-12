@@ -41,19 +41,19 @@ void parseArgs(QApplication* a) {
     qDebug() << "-p to setup peleng size (default: 800)";
     qDebug() << "-b to setup count of pelengs per circle (default: 4096)";
     qDebug() << "-f to setup delay between frames in milliseconds (default: 25)";
-    qDebug() << "-d to setup delay between sending data blocks by radardatasource in milliseconds (default: 15)";
-    qDebug() << "-s to setup size of data blocks to send in pelengs (default: 64)";
+    qDebug() << "-d to setup delay between sending data blocks by radardatasource in milliseconds (default: 30)";
+    qDebug() << "-s to setup size of data blocks to send in pelengs (default: 128)";
     qDebug() << "-w to setup rliwidget size (example: 1024x768, no default, depends on screen size)";
 
     exit(0);
   }
 
-  a->setProperty(RLI::PROPERTY_PELENG_SIZE, args.contains("-p") ? args[args.indexOf("-p") + 1].toInt() : 800);
-  a->setProperty(RLI::PROPERTY_BEARINGS_PER_CYCLE, args.contains("-b") ? args[args.indexOf("-b") + 1].toInt() : 4096);
-  a->setProperty(RLI::PROPERTY_FRAME_DELAY, args.contains("-f") ? args[args.indexOf("-f") + 1].toInt() : 25);
-  a->setProperty(RLI::PROPERTY_DATA_DELAY, args.contains("-d") ? args[args.indexOf("-d") + 1].toInt() : 30);
-  a->setProperty(RLI::PROPERTY_BLOCK_SIZE, args.contains("-s") ? args[args.indexOf("-s") + 1].toInt() : 128);
+  a->setProperty(RLI::PROPERTY_PELENG_SIZE,   args.contains("-p") ? args[args.indexOf("-p") + 1].toInt() : 800);
+  a->setProperty(RLI::PROPERTY_PELENG_COUNT,  args.contains("-b") ? args[args.indexOf("-b") + 1].toInt() : 4096);
+  a->setProperty(RLI::PROPERTY_FRAME_DELAY,   args.contains("-f") ? args[args.indexOf("-f") + 1].toInt() : 25);
+  a->setProperty(RLI::PROPERTY_DATA_DELAY,    args.contains("-d") ? args[args.indexOf("-d") + 1].toInt() : 30);
+  a->setProperty(RLI::PROPERTY_BLOCK_SIZE,    args.contains("-s") ? args[args.indexOf("-s") + 1].toInt() : 128);
 
   if (args.contains("-w"))
-    a->setProperty(RLI::PROPERTY_RLI_WIDGET_SIZE, args[args.indexOf("-w") + 1]);
+    a->setProperty(RLI::PROPERTY_RLI_WGT_SIZE, args[args.indexOf("-w") + 1]);
 }

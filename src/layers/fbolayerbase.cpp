@@ -5,8 +5,7 @@
 using namespace RLI;
 
 FboLayerBase::FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent)
-  : QObject(parent)
-  , QOpenGLFunctions(context) {
+  : QObject(parent), QOpenGLExtraFunctions(context) {
   initializeOpenGLFunctions();
   resize(size);
 }

@@ -1,6 +1,7 @@
 #ifndef RADARENGINE_H
 #define RADARENGINE_H
 
+#include <map>
 #include <vector>
 
 #include <QTime>
@@ -41,17 +42,22 @@ namespace RLI {
     void clearData();
 
   private:
-    bool _has_data = false;
-
     void initShader();
     void initBuffers();
 
+    void recalcMVP();
+
     void drawPelengs(int first, int last);
+
+    QMatrix4x4 _mvp_matrix;
 
     // OpenGL vars
     QOpenGLShaderProgram* _program;
 
-    enum { ATTR_POSITION = 0, ATTR_AMPLITUDE = 1, ATTR_COUNT = 2 } ;
+    enum { ATTR_POSITION  = 0
+         , ATTR_AMPLITUDE = 1
+         , ATTR_COUNT     = 2 } ;
+
     enum { UNIF_MVP_MATRIX    = 0
          , UNIF_TEXTURE       = 1
          , UNIF_THREASHOLD    = 2
@@ -61,18 +67,21 @@ namespace RLI {
          , UNIF_NORTH_SHIFT   = 6
          , UNIF_COUNT         = 7 } ;
 
-    GLuint _vbo_ids[ATTR_COUNT];
-    int _attr_locs[ATTR_COUNT];
-    int _unif_locs[UNIF_COUNT];
-    GLuint _ind_vbo_id;
+    GLuint _vao_id; // Vertex array oobject id
+    GLuint _eab_id; // Element array buffer id
+    GLuint _vbo_ids  [ATTR_COUNT];  // Vertex buffer object id's (one per shader attribute)
+    GLuint _attr_locs[ATTR_COUNT];  // Shader program
+    GLint  _unif_locs[UNIF_COUNT];
 
-    int _peleng_count = 0;
-    int _peleng_len   = 0;
 
-    bool  _draw_circle;
-    int  _last_drawn_peleng;
-    int  _last_added_peleng;
-    QPoint _center_shift { 0, 0 };
+    // Layer vars
+    QPoint  _center_shift { 0, 0 };
+    int     _peleng_count;
+    int     _peleng_len;
+
+    int  _first_recieved_peleng;
+    int  _recieved_peleng_count;
+
 
     // Palette
     RadarPalette* _palette;

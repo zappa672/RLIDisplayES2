@@ -136,12 +136,13 @@ void RadarEngine::resizeTexture(Layout* layout) {
 
 void RadarEngine::clearData() {
   auto atr_buf_size = _peleng_count*_peleng_len*static_cast<qopengl_GLintptr>(sizeof(GLfloat));
+  std::vector<GLfloat> attrs(static_cast<size_t>(_peleng_count*_peleng_len), 0.f);
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
-  glBufferData(GL_ARRAY_BUFFER, atr_buf_size, nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, atr_buf_size, attrs.data(), GL_DYNAMIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  _first_recieved_peleng = -1;
+  _first_recieved_peleng = 0;
   _recieved_peleng_count = 0;
 
   clearTexture();
@@ -178,11 +179,6 @@ void RadarEngine::recalcMVP() {
 }
 
 void RadarEngine::updateTexture(const State& state) {
-  if (_first_recieved_peleng < 0) {
-    clearTexture();
-    return;
-  }
-
   if (QVector2D(_center_shift - state.center_shift).length() > 0.5f) {
     clearTexture();
     _center_shift = state.center_shift;

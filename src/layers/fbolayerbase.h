@@ -1,10 +1,9 @@
 #ifndef FBOLAYERBASE_H
 #define FBOLAYERBASE_H
 
+#include <QSize>
 #include <QObject>
 #include <QOpenGLExtraFunctions>
-
-#include <QSize>
 
 #include "../common/layout.h"
 #include "../common/state.h"

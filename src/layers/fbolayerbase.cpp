@@ -1,7 +1,5 @@
 #include "fbolayerbase.h"
 
-#include <assert.h>
-
 using namespace RLI;
 
 FboLayerBase::FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent)
@@ -21,6 +19,10 @@ FboLayerBase::~FboLayerBase() {
 
 void FboLayerBase::clear(float r, float g, float b, float a, float d) {
   glBindFramebuffer(GL_FRAMEBUFFER, _fbo_id);
+
+  glDisable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_ALWAYS);
 
   glClearDepthf(d);
   glClearColor(r, g, b, a);

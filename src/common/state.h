@@ -12,8 +12,7 @@ namespace RLI {
   enum class DepthUnit {
     FEET    = 0
   , METER   = 1
-  , FATHOM  = 2
-  };
+  , FATHOM  = 2 };
 
   enum class WidgetState {
     DEFAULT        = 0
@@ -26,18 +25,17 @@ namespace RLI {
   enum class Orientation {
     HEAD     = 0
   , NORTH    = 1
-  , COURSE   = 2
-  };
+  , COURSE   = 2 };
 
   enum class Mode : char {
     T   = 'T'
   , S   = 'S'
   , X   = 'X'
-  , M   = 'M'
-  } ;
+  , M   = 'M' } ;
 
 
   struct State {
+    DepthUnit   depth_unit   { DepthUnit::METER };
     WidgetState state        { WidgetState::DEFAULT };
     Orientation orientation  { Orientation::NORTH };
     Mode        mode         { Mode::X };
@@ -51,10 +49,9 @@ namespace RLI {
     // Radar parameters
 
     // Chart parameters
-    double      north_shift   { 0.0 };
+    float       north_shift   { 45.0 };
     RadarScale  radar_scale   { };
-    double      chart_scale   { 100.0 };
-    QPoint      center_shift  { 0, 0 };
+    QPoint      center_shift  { 100, 100 };
 
     // Ship parameters
     GeoPos  ship_position     { 0, 0 };
@@ -72,12 +69,12 @@ namespace RLI {
     bool    show_parallel     { false };
 
     // Radar parameters
-    int peleng_length   { 800 };
     int peleng_count    { 4096 };
+    int peleng_size     { 800  };
 
     // Magnifier parameters
-    int magn_min_rad    { 96 };
-    int magn_min_peleng { 90 };
+    int magn_min_rad    { 96  };
+    int magn_min_peleng { 90  };
     int magn_height     { 224 };
     int magn_width      { 224 };
   };

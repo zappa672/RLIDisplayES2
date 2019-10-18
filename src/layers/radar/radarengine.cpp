@@ -237,9 +237,10 @@ void RadarEngine::drawPelengs(int first, int last) {
     glClear(GL_DEPTH_BUFFER_BIT);
   }
 
-  int inds_to_draw = (last-first+1)*(2*_peleng_size+2);
-  size_t inds_offset = static_cast<size_t>(first*(2*_peleng_size+2));
+  //int inds_to_draw = (last-first+1)*(2*_peleng_size+2);
+  //size_t inds_offset = static_cast<size_t>(first*(2*_peleng_size+2));
 
-  glDrawElements(GL_TRIANGLE_STRIP, inds_to_draw, GL_UNSIGNED_INT, reinterpret_cast<const GLvoid*>(inds_offset * sizeof(GLuint)));
+  //glDrawElements(GL_TRIANGLE_STRIP, inds_to_draw, GL_UNSIGNED_INT, reinterpret_cast<const GLvoid*>(inds_offset * sizeof(GLuint)));
+  glDrawArrays(GL_POINTS, first*_peleng_size, (last-first+1)*_peleng_size);
 }
 

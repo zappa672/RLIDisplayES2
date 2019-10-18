@@ -27,6 +27,8 @@ SOURCES += \
   src/common/layout.cpp \
   src/common/math.cpp \
   src/common/state.cpp \
+  src/common/strings.cpp \
+  src/common/triangulate.cpp \
   src/layers/radar/radarengine.cpp \
   src/layers/radar/radarpalette.cpp \
   src/main.cpp \
@@ -39,6 +41,9 @@ HEADERS += \
   src/common/layout.h \
   src/common/math.h \
   src/common/state.h \
+  src/common/stringnames.h \
+  src/common/strings.h \
+  src/common/triangulate.h \
   src/layers/radar/radarengine.h \
   src/layers/radar/radarpalette.h \
   src/mainwidget.h \

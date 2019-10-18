@@ -12,7 +12,7 @@ using namespace RLI;
 RadarEngine::RadarEngine(const State& state, Layout* layout, QOpenGLContext* context, QObject* parent)
   : FboLayerBase(layout->circle.box_rect.size(), context, parent) {
 
-  _palette = new RadarPalette(context, this);
+  //_palette = new RadarPalette(context, this);
 
   _program = new QOpenGLShaderProgram(this);
 
@@ -32,7 +32,7 @@ RadarEngine::~RadarEngine() {
   glDeleteBuffers(ATTR_COUNT, _vbo_ids);
   //glDeleteBuffers(1, &_eab_id);
 
-  delete _palette;
+  //delete _palette;
 }
 
 void RadarEngine::clearTexture() {
@@ -40,7 +40,7 @@ void RadarEngine::clearTexture() {
 }
 
 void RadarEngine::onBrightnessChanged(int br) {
-  _palette->setBrightness(br);
+  //_palette->setBrightness(br);
 }
 
 void RadarEngine::initShader() {
@@ -51,7 +51,7 @@ void RadarEngine::initShader() {
   _program->bind();
 
   _unif_locs[UNIF_MVP_MATRIX]     = _program->uniformLocation("mvp_matrix");
-  _unif_locs[UNIF_TEXTURE]        = _program->uniformLocation("texture");
+  //_unif_locs[UNIF_TEXTURE]        = _program->uniformLocation("texture");
   _unif_locs[UNIF_THREASHOLD]     = _program->uniformLocation("threashold");
   _unif_locs[UNIF_PELENG_SIZE]    = _program->uniformLocation("peleng_size");
   _unif_locs[UNIF_PELENG_COUNT]   = _program->uniformLocation("peleng_count");
@@ -203,10 +203,10 @@ void RadarEngine::updateTexture(const State& state) {
   glUseProgram(_program->programId());
   glBindVertexArray(_vao_id);
 
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, _palette->texture());
+  //glActiveTexture(GL_TEXTURE0);
+  //glBindTexture(GL_TEXTURE_2D, _palette->texture());
 
-  glUniform1i(_unif_locs[UNIF_TEXTURE], 0);
+  //glUniform1i(_unif_locs[UNIF_TEXTURE], 0);
   glUniformMatrix4fv(_unif_locs[UNIF_MVP_MATRIX], 1, GL_FALSE, (projection*view*transform).data());
   glUniform1f(_unif_locs[UNIF_THREASHOLD], 1.f);
 
@@ -220,7 +220,7 @@ void RadarEngine::updateTexture(const State& state) {
     drawPelengs(0, last_peleng_to_draw);
   }
 
-  glBindTexture(GL_TEXTURE_2D, 0);
+  //glBindTexture(GL_TEXTURE_2D, 0);
   glBindVertexArray(0);
   glUseProgram(0);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);

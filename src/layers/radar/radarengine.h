@@ -28,7 +28,7 @@ namespace RLI {
     virtual ~RadarEngine() override;
 
     inline GLuint ampsVboId()     const { return _vbo_ids[ATTR_AMPLITUDE]; }
-    inline GLuint paletteTexId()  const { return _palette->texture(); }
+    //inline GLuint paletteTexId()  const { return _palette->texture(); }
 
   public slots:
     void onBrightnessChanged(int br);
@@ -55,7 +55,7 @@ namespace RLI {
          , ATTR_COUNT         = 2 } ;
 
     enum { UNIF_MVP_MATRIX    = 0
-         , UNIF_TEXTURE       = 1
+         //, UNIF_TEXTURE       = 1
          , UNIF_THREASHOLD    = 2
          , UNIF_PELENG_SIZE   = 3
          , UNIF_PELENG_COUNT  = 4
@@ -78,7 +78,7 @@ namespace RLI {
 
 
     // Palette
-    RadarPalette* _palette;
+    // RadarPalette* _palette;
   };
 
 }

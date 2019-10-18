@@ -62,7 +62,7 @@ namespace RLI {
          , UNIF_COUNT         = 5 } ;
 
     GLuint _vao_id;                 // Vertex array oobject id
-    GLuint _eab_id;                 // Element array buffer id
+    //GLuint _eab_id;                 // Element array buffer id
     GLuint _vbo_ids  [ATTR_COUNT];  // Vertex buffer object id's (one per shader attribute)
     GLuint _attr_locs[ATTR_COUNT];  // Shader program
     GLint  _unif_locs[UNIF_COUNT];

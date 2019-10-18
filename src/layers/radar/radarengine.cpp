@@ -18,7 +18,7 @@ RadarEngine::RadarEngine(const State& state, Layout* layout, QOpenGLContext* con
 
   glGenVertexArrays(1, &_vao_id);
   glGenBuffers(ATTR_COUNT, _vbo_ids);
-  glGenBuffers(1, &_eab_id);
+  //glGenBuffers(1, &_eab_id);
 
   initShader();  
 
@@ -30,7 +30,7 @@ RadarEngine::~RadarEngine() {
 
   glDeleteVertexArrays(1, &_vao_id);
   glDeleteBuffers(ATTR_COUNT, _vbo_ids);
-  glDeleteBuffers(1, &_eab_id);
+  //glDeleteBuffers(1, &_eab_id);
 
   delete _palette;
 }
@@ -81,13 +81,13 @@ void RadarEngine::resizeData(int peleng_count, int peleng_size) {
   glVertexAttribPointer( _attr_locs[ATTR_AMPLITUDE], 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
   glEnableVertexAttribArray(_attr_locs[ATTR_AMPLITUDE]);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
 
   glBindVertexArray(0);
 }
 
 void RadarEngine::initBuffers() {
-  std::vector<GLuint> indices;
+  //std::vector<GLuint> indices;
   std::vector<GLfloat> positions;
 
   int total = _peleng_count*_peleng_size;
@@ -95,29 +95,29 @@ void RadarEngine::initBuffers() {
   for (int index = 0; index < _peleng_count; index++) {
     for (int radius = 0; radius < _peleng_size; radius++) {
       int curr_index = index*_peleng_size + radius;
-      int prev_index = ((index-1)*_peleng_size + radius + total) % total;
+      //int prev_index = ((index-1)*_peleng_size + radius + total) % total;
 
       positions.push_back(curr_index);
-      indices.push_back(static_cast<GLuint>(curr_index));
-      indices.push_back(static_cast<GLuint>(prev_index));
+      //indices.push_back(static_cast<GLuint>(curr_index));
+      //indices.push_back(static_cast<GLuint>(prev_index));
     }
 
-    GLuint last = indices[indices.size()-1];
-    indices.push_back(last);
-    indices.push_back((last+1) % static_cast<GLuint>(total));
+    //GLuint last = indices[indices.size()-1];
+    //indices.push_back(last);
+    //indices.push_back((last+1) % static_cast<GLuint>(total));
   }
 
   auto atr_buf_size = _peleng_count*_peleng_size*static_cast<qopengl_GLintptr>(sizeof(GLfloat));
-  auto ind_buf_size = _peleng_count*(2*_peleng_size+2)*static_cast<qopengl_GLintptr>(sizeof(GLuint));
+  //auto ind_buf_size = _peleng_count*(2*_peleng_size+2)*static_cast<qopengl_GLintptr>(sizeof(GLuint));
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
   glBufferData(GL_ARRAY_BUFFER, atr_buf_size, positions.data(), GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, ind_buf_size, indices.data(), GL_STATIC_DRAW);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
+  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, ind_buf_size, indices.data(), GL_STATIC_DRAW);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   clearData();
 }

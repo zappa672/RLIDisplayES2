@@ -8,16 +8,21 @@
 #include "../common/layout.h"
 #include "../common/state.h"
 
+#include "layerbase.h"
+
 namespace RLI {
 
-  class FboLayerBase : public QObject, protected QOpenGLExtraFunctions {
+  class FboLayerBase : public QObject, public LayerBase {
     Q_OBJECT
   public:
     FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent = nullptr);
     virtual ~FboLayerBase();
 
-    inline const QSize&   size()        const { return _fbo_size; }
+    inline const QSize&   fboSize()     const { return _fbo_size; }
     inline const GLuint&  textureId()   const { return _fbo_tex_id; }
+
+    inline int            fboWidth()    const { return _fbo_size.width(); }
+    inline int            fboHeight()   const { return _fbo_size.height(); }
 
   public slots:
     virtual void resizeTexture(Layout* layout) =0;

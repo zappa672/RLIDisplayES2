@@ -28,7 +28,7 @@ namespace RLI {
     virtual ~RadarEngine() override;
 
     inline GLuint ampsVboId()     const { return _vbo_ids[ATTR_AMPLITUDE]; }
-    //inline GLuint paletteTexId()  const { return _palette->texture(); }
+    inline GLuint paletteTexId()  const { return _palette->texture(); }
 
   public slots:
     void onBrightnessChanged(int br);
@@ -42,31 +42,9 @@ namespace RLI {
     void clearData();
 
   private:
-    void initShader();
     void initBuffers();
-
+    QMatrix4x4 getMVP(const State& state);
     void drawPelengs(int first, int last);
-
-    // OpenGL vars
-    QOpenGLShaderProgram* _program;
-
-    enum { ATTR_POSITION      = 0
-         , ATTR_AMPLITUDE     = 1
-         , ATTR_COUNT         = 2 } ;
-
-    enum { UNIF_MVP_MATRIX    = 0
-         //, UNIF_TEXTURE       = 1
-         , UNIF_THREASHOLD    = 2
-         , UNIF_PELENG_SIZE   = 3
-         , UNIF_PELENG_COUNT  = 4
-         , UNIF_COUNT         = 5 } ;
-
-    GLuint _vao_id;                 // Vertex array oobject id
-    //GLuint _eab_id;                 // Element array buffer id
-    GLuint _vbo_ids  [ATTR_COUNT];  // Vertex buffer object id's (one per shader attribute)
-    GLuint _attr_locs[ATTR_COUNT];  // Shader program
-    GLint  _unif_locs[UNIF_COUNT];
-
 
     // Layer vars
     QPoint  _center_shift { 0, 0 };
@@ -76,9 +54,23 @@ namespace RLI {
     int  _first_recieved_peleng;
     int  _recieved_peleng_count;
 
-
     // Palette
-    // RadarPalette* _palette;
+    RadarPalette* _palette;
+
+    // OpenGL vars
+    static const int ATTR_POSITION  = 0;
+    static const int ATTR_AMPLITUDE = 1;
+    static const int ATTR_COUNT     = 2;
+
+    static const int UNIF_MVP_MATRIX    = 0;
+    static const int UNIF_TEXTURE       = 1;
+    static const int UNIF_THREASHOLD    = 2;
+    static const int UNIF_PELENG_SIZE   = 3;
+    static const int UNIF_PELENG_COUNT  = 4;
+
+    GLuint _vao_id;               // Vertex array oobject id
+    GLuint _eab_id;               // Element array buffer id
+    GLuint _vbo_ids[ATTR_COUNT];  // Vertex buffer object id's (one per shader attribute)
   };
 
 }

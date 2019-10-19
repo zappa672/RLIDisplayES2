@@ -2,9 +2,7 @@
 
 using namespace RLI;
 
-FboLayerBase::FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent)
-  : QObject(parent), QOpenGLExtraFunctions(context) {
-  initializeOpenGLFunctions();
+FboLayerBase::FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent) : QObject(parent), LayerBase(context) {
   resize(size);
 }
 
@@ -15,7 +13,6 @@ FboLayerBase::~FboLayerBase() {
     glDeleteTextures(1, &_fbo_tex_id);
   }
 }
-
 
 void FboLayerBase::clear(float r, float g, float b, float a, float d) {
   glBindFramebuffer(GL_FRAMEBUFFER, _fbo_id);

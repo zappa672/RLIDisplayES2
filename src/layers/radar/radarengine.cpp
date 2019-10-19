@@ -12,27 +12,33 @@ using namespace RLI;
 RadarEngine::RadarEngine(const State& state, Layout* layout, QOpenGLContext* context, QObject* parent)
   : FboLayerBase(layout->circle.box_rect.size(), context, parent) {
 
-  //_palette = new RadarPalette(context, this);
-
-  _program = new QOpenGLShaderProgram(this);
+  _palette = new RadarPalette(context, this);
 
   glGenVertexArrays(1, &_vao_id);
   glGenBuffers(ATTR_COUNT, _vbo_ids);
-  //glGenBuffers(1, &_eab_id);
+  glGenBuffers(1, &_eab_id);
 
-  initShader();  
+  static const QMap<QString, int> attr_inices
+  { { "amplitude",  ATTR_AMPLITUDE }
+  , { "position",   ATTR_POSITION  } };
 
+  static const QMap<QString, int> unif_inices
+  { { "mvp_matrix",   UNIF_MVP_MATRIX   }
+  , { "texture",      UNIF_TEXTURE      }
+  , { "threashold",   UNIF_THREASHOLD   }
+  , { "peleng_size",  UNIF_PELENG_SIZE  }
+  , { "peleng_count", UNIF_PELENG_COUNT } };
+
+  initShaderProgram(":/shaders/radar", attr_inices, unif_inices);
   resizeData(state.peleng_count, state.peleng_size);
 }
 
 RadarEngine::~RadarEngine() {
-  delete _program;
-
   glDeleteVertexArrays(1, &_vao_id);
   glDeleteBuffers(ATTR_COUNT, _vbo_ids);
-  //glDeleteBuffers(1, &_eab_id);
+  glDeleteBuffers(1, &_eab_id);
 
-  //delete _palette;
+  delete _palette;
 }
 
 void RadarEngine::clearTexture() {
@@ -40,26 +46,7 @@ void RadarEngine::clearTexture() {
 }
 
 void RadarEngine::onBrightnessChanged(int br) {
-  //_palette->setBrightness(br);
-}
-
-void RadarEngine::initShader() {
-  _program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/radar.vert.glsl");
-  _program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/radar.frag.glsl");
-
-  _program->link();
-  _program->bind();
-
-  _unif_locs[UNIF_MVP_MATRIX]     = _program->uniformLocation("mvp_matrix");
-  //_unif_locs[UNIF_TEXTURE]        = _program->uniformLocation("texture");
-  _unif_locs[UNIF_THREASHOLD]     = _program->uniformLocation("threashold");
-  _unif_locs[UNIF_PELENG_SIZE]    = _program->uniformLocation("peleng_size");
-  _unif_locs[UNIF_PELENG_COUNT]   = _program->uniformLocation("peleng_count");
-
-  _attr_locs[ATTR_POSITION]       = static_cast<GLuint>(_program->attributeLocation("position"));
-  _attr_locs[ATTR_AMPLITUDE]      = static_cast<GLuint>(_program->attributeLocation("amplitude"));
-
-  _program->release();
+  _palette->setBrightness(br);
 }
 
 void RadarEngine::resizeData(int peleng_count, int peleng_size) {
@@ -74,20 +61,20 @@ void RadarEngine::resizeData(int peleng_count, int peleng_size) {
   glBindVertexArray(_vao_id);
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
-  glVertexAttribPointer(_attr_locs[ATTR_POSITION], 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
-  glEnableVertexAttribArray(_attr_locs[ATTR_POSITION]);
+  glVertexAttribPointer(attrId(ATTR_POSITION), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
+  glEnableVertexAttribArray(attrId(ATTR_POSITION));
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
-  glVertexAttribPointer( _attr_locs[ATTR_AMPLITUDE], 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
-  glEnableVertexAttribArray(_attr_locs[ATTR_AMPLITUDE]);
+  glVertexAttribPointer(attrId(ATTR_AMPLITUDE), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
+  glEnableVertexAttribArray(attrId(ATTR_AMPLITUDE));
 
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
 
   glBindVertexArray(0);
 }
 
 void RadarEngine::initBuffers() {
-  //std::vector<GLuint> indices;
+  std::vector<GLuint> indices;
   std::vector<GLfloat> positions;
 
   int total = _peleng_count*_peleng_size;
@@ -95,29 +82,29 @@ void RadarEngine::initBuffers() {
   for (int index = 0; index < _peleng_count; index++) {
     for (int radius = 0; radius < _peleng_size; radius++) {
       int curr_index = index*_peleng_size + radius;
-      //int prev_index = ((index-1)*_peleng_size + radius + total) % total;
+      int prev_index = ((index-1)*_peleng_size + radius + total) % total;
 
       positions.push_back(curr_index);
-      //indices.push_back(static_cast<GLuint>(curr_index));
-      //indices.push_back(static_cast<GLuint>(prev_index));
+      indices.push_back(static_cast<GLuint>(curr_index));
+      indices.push_back(static_cast<GLuint>(prev_index));
     }
 
-    //GLuint last = indices[indices.size()-1];
-    //indices.push_back(last);
-    //indices.push_back((last+1) % static_cast<GLuint>(total));
+    GLuint last = indices[indices.size()-1];
+    indices.push_back(last);
+    indices.push_back((last+1) % static_cast<GLuint>(total));
   }
 
   auto atr_buf_size = _peleng_count*_peleng_size*static_cast<qopengl_GLintptr>(sizeof(GLfloat));
-  //auto ind_buf_size = _peleng_count*(2*_peleng_size+2)*static_cast<qopengl_GLintptr>(sizeof(GLuint));
+  auto ind_buf_size = _peleng_count*(2*_peleng_size+2)*static_cast<qopengl_GLintptr>(sizeof(GLuint));
 
   glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
   glBufferData(GL_ARRAY_BUFFER, atr_buf_size, positions.data(), GL_STATIC_DRAW);
 
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
-  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, ind_buf_size, indices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, ind_buf_size, indices.data(), GL_STATIC_DRAW);
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
   clearData();
 }
@@ -154,6 +141,23 @@ void RadarEngine::updateData(int offset, int count, GLfloat* amps) {
   _recieved_peleng_count += count;
 }
 
+QMatrix4x4 RadarEngine::getMVP(const State& state) {
+  QMatrix4x4 modelTransform;
+  modelTransform.setToIdentity();
+  modelTransform.translate(state.center_shift.x(), state.center_shift.y());
+  modelTransform.rotate(state.north_shift, QVector3D(0, 0, 1));
+
+  QMatrix4x4 view;
+  view.setToIdentity();
+  view.translate(fboWidth() / 2.f, fboHeight() / 2.f);
+
+  QMatrix4x4 projection;
+  projection.setToIdentity();
+  projection.ortho(0.f, fboWidth(), 0.f, fboHeight(), -255.f, 255.f);
+
+  return projection*view*modelTransform;
+}
+
 void RadarEngine::updateTexture(const State& state) {
   if (QVector2D(_center_shift - state.center_shift).length() > 0.5f) {
     clearTexture();
@@ -180,38 +184,32 @@ void RadarEngine::updateTexture(const State& state) {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_GREATER);
 
-  QSize sz = FboLayerBase::size();
-  glViewport(0.f, 0.f, sz.width(), sz.height());
-
-
-  QMatrix4x4 transform;
-  transform.setToIdentity();
-  transform.translate(state.center_shift.x(), state.center_shift.y());
-  transform.rotate(state.north_shift, QVector3D(0, 0, 1));
-
-  QMatrix4x4 view;
-  view.setToIdentity();
-  view.translate(sz.width() / 2.f, sz.height() / 2.f);
-
-  QMatrix4x4 projection;
-  projection.setToIdentity();
-  projection.ortho(0.f, sz.width(), 0.f, sz.height(), -255.f, 255.f);
-
-
+  glViewport(0.f, 0.f, fboWidth(), fboHeight());
 
   glBindFramebuffer(GL_FRAMEBUFFER, fboId());
-  glUseProgram(_program->programId());
+  glUseProgram(progId());
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, _palette->texture());
+
+  glUniform1i(unifId(UNIF_TEXTURE), 0);
+  glUniformMatrix4fv(unifId(UNIF_MVP_MATRIX), 1, GL_FALSE, getMVP(state).data());
+  glUniform1f(unifId(UNIF_THREASHOLD), 1.f);
+
+  glUniform1f(unifId(UNIF_PELENG_SIZE), _peleng_size);
+  glUniform1f(unifId(UNIF_PELENG_COUNT), _peleng_count);
+
   glBindVertexArray(_vao_id);
 
-  //glActiveTexture(GL_TEXTURE0);
-  //glBindTexture(GL_TEXTURE_2D, _palette->texture());
-
-  //glUniform1i(_unif_locs[UNIF_TEXTURE], 0);
-  glUniformMatrix4fv(_unif_locs[UNIF_MVP_MATRIX], 1, GL_FALSE, (projection*view*transform).data());
-  glUniform1f(_unif_locs[UNIF_THREASHOLD], 1.f);
-
-  glUniform1f(_unif_locs[UNIF_PELENG_SIZE], _peleng_size);
-  glUniform1f(_unif_locs[UNIF_PELENG_COUNT], _peleng_count);
+  //glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  //glVertexAttribPointer(attrId(ATTR_POSITION), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
+  //glEnableVertexAttribArray(attrId(ATTR_POSITION));
+  //
+  //glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
+  //glVertexAttribPointer(attrId(ATTR_AMPLITUDE), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
+  //glEnableVertexAttribArray(attrId(ATTR_AMPLITUDE));
+  //
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
 
   if (first_peleng_to_draw <= last_peleng_to_draw) {
     drawPelengs(first_peleng_to_draw, last_peleng_to_draw);
@@ -220,8 +218,11 @@ void RadarEngine::updateTexture(const State& state) {
     drawPelengs(0, last_peleng_to_draw);
   }
 
-  //glBindTexture(GL_TEXTURE_2D, 0);
+  //glBindBuffer(GL_ARRAY_BUFFER, 0);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
   glUseProgram(0);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   // --------------------------------------  
@@ -237,10 +238,10 @@ void RadarEngine::drawPelengs(int first, int last) {
     glClear(GL_DEPTH_BUFFER_BIT);
   }
 
-  //int inds_to_draw = (last-first+1)*(2*_peleng_size+2);
-  //size_t inds_offset = static_cast<size_t>(first*(2*_peleng_size+2));
+  int inds_to_draw = (last-first+1)*(2*_peleng_size+2);
+  size_t inds_offset = static_cast<size_t>(first*(2*_peleng_size+2));
 
-  //glDrawElements(GL_TRIANGLE_STRIP, inds_to_draw, GL_UNSIGNED_INT, reinterpret_cast<const GLvoid*>(inds_offset * sizeof(GLuint)));
-  glDrawArrays(GL_POINTS, first*_peleng_size, (last-first+1)*_peleng_size);
+  glDrawElements(GL_TRIANGLE_STRIP, inds_to_draw, GL_UNSIGNED_INT, reinterpret_cast<const GLvoid*>(inds_offset * sizeof(GLuint)));
+  //glDrawArrays(GL_POINTS, first*_peleng_size, (last-first+1)*_peleng_size);
 }
 

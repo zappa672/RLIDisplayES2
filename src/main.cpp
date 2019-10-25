@@ -1,6 +1,6 @@
 #include <QApplication>
 #include <QThreadPool>
-#include <QScreen>
+//#include <QScreen>
 #include <QGLFormat>
 
 #include "common/properties.h"
@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   QGLFormat::setDefaultFormat(format);
 
   RLI::MainWidget w;
-  w.setGeometry(QGuiApplication::screens()[0]->geometry());
+  //w.setGeometry(QGuiApplication::screens()[0]->geometry());
   w.showFullScreen();
 
   return a.exec();

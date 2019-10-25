@@ -58,15 +58,17 @@ namespace RLI {
     RadarPalette* _palette;
 
     // OpenGL vars
-    static const int ATTR_POSITION  = 0;
-    static const int ATTR_AMPLITUDE = 1;
-    static const int ATTR_COUNT     = 2;
+    enum SHADER_ATTRIBUTES {
+      ATTR_POSITION  = 0
+    , ATTR_AMPLITUDE = 1
+    , ATTR_COUNT     = 2 };
 
-    static const int UNIF_MVP_MATRIX    = 0;
-    static const int UNIF_TEXTURE       = 1;
-    static const int UNIF_THREASHOLD    = 2;
-    static const int UNIF_PELENG_SIZE   = 3;
-    static const int UNIF_PELENG_COUNT  = 4;
+    enum SHADER_UNIFORMS {
+      UNIF_MVP_MATRIX    = 0
+    , UNIF_TEXTURE       = 1
+    , UNIF_THREASHOLD    = 2
+    , UNIF_PELENG_SIZE   = 3
+    , UNIF_PELENG_COUNT  = 4 };
 
     GLuint _vao_id;               // Vertex array oobject id
     GLuint _eab_id;               // Element array buffer id

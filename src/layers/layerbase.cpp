@@ -2,7 +2,7 @@
 
 using namespace RLI;
 
-LayerBase::LayerBase(QOpenGLContext* context) : QOpenGLExtraFunctions(context) {
+LayerBase::LayerBase(QOpenGLContext* context, QObject* parent) : QObject(parent), QOpenGLExtraFunctions(context) {
   initializeOpenGLFunctions();
   _program = new QOpenGLShaderProgram();
 }

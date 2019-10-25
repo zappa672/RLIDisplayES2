@@ -46,6 +46,7 @@ void MainWidget::initializeGL() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_TEXTURE_2D);
 
+  _layout_manager.resize(size());
   _radarLayer = new RadarEngine(_state, _layout_manager.layout(), context(), this);
 
   glGenBuffers(ATTR_COUNT, _vbo_ids);

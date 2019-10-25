@@ -3,7 +3,6 @@
 
 #include <QSize>
 #include <QObject>
-#include <QOpenGLExtraFunctions>
 
 #include "../common/layout.h"
 #include "../common/state.h"
@@ -12,7 +11,7 @@
 
 namespace RLI {
 
-  class FboLayerBase : public QObject, public LayerBase {
+  class FboLayerBase : public LayerBase {
     Q_OBJECT
   public:
     FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent = nullptr);

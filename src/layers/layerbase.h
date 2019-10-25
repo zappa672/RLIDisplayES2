@@ -4,15 +4,15 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLExtraFunctions>
 
-#include <QSet>
 #include <QMap>
 #include <QString>
 
 namespace RLI {
 
-  class LayerBase : protected QOpenGLExtraFunctions {
+  class LayerBase : public QObject, protected QOpenGLExtraFunctions {
+    Q_OBJECT
   public:
-    LayerBase(QOpenGLContext* context);
+    LayerBase(QOpenGLContext* context, QObject* parent = nullptr);
     virtual ~LayerBase();
 
   protected:

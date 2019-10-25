@@ -2,7 +2,7 @@
 
 using namespace RLI;
 
-FboLayerBase::FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent) : QObject(parent), LayerBase(context) {
+FboLayerBase::FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent) : LayerBase(context, parent) {
   resize(size);
 }
 

@@ -1,8 +1,7 @@
 #include "radarpalette.h"
 
-#include <math.h>
+#include <cmath>
 
-#include <QPixmap>
 #include <QImage>
 #include <QGLWidget>
 
@@ -10,8 +9,8 @@ using namespace RLI;
 
 // Описание палитры РЛИ
 typedef struct rgbRLI_struct {
-  float gamma01_08;                 //линейность яркости от 1й до 8й градации РЛИ
-  float gamma08_15;                 //линейность яркости от 8й до 15й градации РЛИ
+  double gamma01_08;                //линейность яркости от 1й до 8й градации РЛИ
+  double gamma08_15;                //линейность яркости от 8й до 15й градации РЛИ
   unsigned char Rbg,Gbg,Bbg;        //RGB фона
   unsigned char R01,G01,B01;        //RGB для 1й градации РЛИ
   unsigned char R08,G08,B08;        //RGB для 8й градации РЛИ
@@ -19,6 +18,7 @@ typedef struct rgbRLI_struct {
   unsigned char Rtk,Gtk,Btk;        //RGB следов
   unsigned char padding;
 } rgbRLI_struct;
+
 
 RadarPalette::RadarPalette(QOpenGLContext* context, QObject* parent) : QObject(parent), QOpenGLFunctions(context) {
   initializeOpenGLFunctions();
@@ -45,7 +45,6 @@ RadarPalette::~RadarPalette() {
 }
 
 
-
 void RadarPalette::setRgbVar(int val) {
   if (val < 0 || val > 1)
     return;
@@ -61,8 +60,6 @@ void RadarPalette::setBrightness(int val) {
   brightness = val;
   updatePalette();
 }
-
-
 
 void RadarPalette::updatePalette() {
   int palette[16][3];
@@ -82,25 +79,25 @@ void RadarPalette::updatePalette() {
       {     0,      0,  50,  10,  50,  76,  24,  76, 160,  52, 160, 244,  80, 244,  60, 150,  60, 0       } }
     };
 
-  float br = brightness / 255.f; // Вычисление коэффициента яркости
+  double br = brightness / 255.0; // Вычисление коэффициента яркости
 
   // Расчёт цветового расстояния между точками на кривой преобразования амплитуды в цвет
-  float kR[2][4], kG[2][4], kB[2][4];
+  double kR[2][4], kG[2][4], kB[2][4];
 
   for (int i = 0; i < 4; i++) {
-    kR[0][i] = (rgbRLI[rgbRLI_Var][i].R08 - rgbRLI[rgbRLI_Var][i].R01) / 7.f;
-    kG[0][i] = (rgbRLI[rgbRLI_Var][i].G08 - rgbRLI[rgbRLI_Var][i].G01) / 7.f;
-    kB[0][i] = (rgbRLI[rgbRLI_Var][i].B08 - rgbRLI[rgbRLI_Var][i].B01) / 7.f;
+    kR[0][i] = (rgbRLI[rgbRLI_Var][i].R08 - rgbRLI[rgbRLI_Var][i].R01) / 7.0;
+    kG[0][i] = (rgbRLI[rgbRLI_Var][i].G08 - rgbRLI[rgbRLI_Var][i].G01) / 7.0;
+    kB[0][i] = (rgbRLI[rgbRLI_Var][i].B08 - rgbRLI[rgbRLI_Var][i].B01) / 7.0;
 
-    kR[1][i] = (rgbRLI[rgbRLI_Var][i].R15 - rgbRLI[rgbRLI_Var][i].R08) / 7.f;
-    kG[1][i] = (rgbRLI[rgbRLI_Var][i].G15 - rgbRLI[rgbRLI_Var][i].G08) / 7.f;
-    kB[1][i] = (rgbRLI[rgbRLI_Var][i].B15 - rgbRLI[rgbRLI_Var][i].B08) / 7.f;
+    kR[1][i] = (rgbRLI[rgbRLI_Var][i].R15 - rgbRLI[rgbRLI_Var][i].R08) / 7.0;
+    kG[1][i] = (rgbRLI[rgbRLI_Var][i].G15 - rgbRLI[rgbRLI_Var][i].G08) / 7.0;
+    kB[1][i] = (rgbRLI[rgbRLI_Var][i].B15 - rgbRLI[rgbRLI_Var][i].B08) / 7.0;
   }
 
   int n = 0;
 
   for (int j = 0; j < 16; j++) {
-    float R, G, B;
+    double R, G, B;
 
     if (j == 0) {
       // Вычисление цвета фона
@@ -109,13 +106,13 @@ void RadarPalette::updatePalette() {
       B = br * rgbRLI[rgbRLI_Var][n].Bbg;
     } else if (j < 8) {
       // Вычисление RGBкодов для амплитуд j = 1..7 и наборов цветов n = 0..3
-      float fj = (j - 1) ? (pow((j - 1) / 7.f, exp(rgbRLI[rgbRLI_Var][n].gamma01_08 / 32.f)) * 7.f) : 0.f;
+      double fj = (j - 1) ? (pow((j - 1) / 7.0, exp(rgbRLI[rgbRLI_Var][n].gamma01_08 / 32.0)) * 7.0) : 0.0;
       R = br * (rgbRLI[rgbRLI_Var][n].R01 + fj * kR[0][n]);
       G = br * (rgbRLI[rgbRLI_Var][n].G01 + fj * kG[0][n]);
       B = br * (rgbRLI[rgbRLI_Var][n].B01 + fj * kB[0][n]);
     } else {
       // Вычисление RGBкодов для амплитуд j = 8..15 и наборов цветов n = 0..3
-      float fj = (j - 8) ? (pow((j - 8) / 7.f, exp(rgbRLI[rgbRLI_Var][n].gamma08_15 / 32.f)) * 7.f) : 0.f;
+      double fj = (j - 8) ? (pow((j - 8) / 7.0, exp(rgbRLI[rgbRLI_Var][n].gamma08_15 / 32.0)) * 7.0) : 0.0;
       R = br * (rgbRLI[rgbRLI_Var][n].R08) + fj * kR[1][n];
       G = br * (rgbRLI[rgbRLI_Var][n].G08) + fj * kG[1][n];
       B = br * (rgbRLI[rgbRLI_Var][n].B08) + fj * kB[1][n];

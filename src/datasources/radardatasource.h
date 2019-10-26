@@ -1,11 +1,7 @@
 #ifndef RADARDATASOURCE_H
 #define RADARDATASOURCE_H
 
-#include <stdint.h>
 #include <QObject>
-#include <QtConcurrent/QtConcurrentRun>
-
-#include <QtGlobal>
 #include <QOpenGLFunctions>
 
 namespace RLI {

@@ -1,22 +1,8 @@
 #ifndef RADARENGINE_H
 #define RADARENGINE_H
 
-#include <map>
-#include <vector>
-
-#include <QTime>
-#include <QColor>
-#include <QVector2D>
-
-#include <QOpenGLShaderProgram>
-
-#include "../../common/state.h"
-#include "../../common/layout.h"
-
-#include "radarpalette.h"
-
 #include "../fbolayerbase.h"
-
+#include "radarpalette.h"
 
 namespace RLI {
 
@@ -24,7 +10,7 @@ namespace RLI {
   class RadarEngine : public FboLayerBase {
     Q_OBJECT
   public:
-    RadarEngine(const State& state, Layout* layout, QOpenGLContext* context, QObject* parent = nullptr);
+    RadarEngine(const State& state, const Layout& layout, QOpenGLContext* context, QObject* parent = nullptr);
     virtual ~RadarEngine() override;
 
     inline GLuint ampsVboId()     const { return _vbo_ids[ATTR_AMPLITUDE]; }
@@ -33,8 +19,8 @@ namespace RLI {
   public slots:
     void onBrightnessChanged(int br);
 
-    void resizeTexture(Layout* layout) override;
-    void updateTexture(const State& state) override;
+    void paint(const State& state, const Layout& layout) override;
+    void resizeTexture(const Layout& layout) override;
     void clearTexture() override;
 
     void resizeData(int peleng_count, int peleng_size);

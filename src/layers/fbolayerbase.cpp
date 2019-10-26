@@ -2,12 +2,12 @@
 
 using namespace RLI;
 
-FboLayerBase::FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent) : LayerBase(context, parent) {
-  resize(size);
+FboLayerBase::FboLayerBase(const QRect& rect, QOpenGLContext* context, QObject* parent) : LayerBase(context, parent) {
+  resize(rect);
 }
 
 FboLayerBase::~FboLayerBase() {
-  if (!_fbo_size.isEmpty()) {
+  if (!_fbo_rect.isEmpty()) {
     glDeleteFramebuffers(1, &_fbo_id);
     glDeleteRenderbuffers(1, &_depth_rbo_id);
     glDeleteTextures(1, &_fbo_tex_id);
@@ -28,11 +28,11 @@ void FboLayerBase::clear(float r, float g, float b, float a, float d) {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FboLayerBase::resize(const QSize& size) {
-  if (size.width() <= 0 || size.width() <= 0 || size == _fbo_size)
+void FboLayerBase::resize(const QRect& rect) {
+  if (rect.width() <= 0 || rect.width() <= 0 || rect == _fbo_rect)
     return;
 
-  if (!_fbo_size.isEmpty()) {
+  if (!_fbo_rect.isEmpty()) {
     glDeleteFramebuffers(1, &_fbo_id);
     glDeleteRenderbuffers(1, &_depth_rbo_id);
     glDeleteTextures(1, &_fbo_tex_id);
@@ -43,7 +43,7 @@ void FboLayerBase::resize(const QSize& size) {
   glGenTextures(1, &_fbo_tex_id);
 
   glBindTexture(GL_TEXTURE_2D, _fbo_tex_id);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width(), size.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rect.width(), rect.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -52,7 +52,7 @@ void FboLayerBase::resize(const QSize& size) {
   glBindTexture(GL_TEXTURE_2D, 0);
 
   glBindRenderbuffer(GL_RENDERBUFFER, _depth_rbo_id);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, size.width(), size.height());
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, rect.width(), rect.height());
   glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
   glBindFramebuffer(GL_FRAMEBUFFER, _fbo_id);
@@ -60,7 +60,7 @@ void FboLayerBase::resize(const QSize& size) {
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depth_rbo_id);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  _fbo_size = size;
+  _fbo_rect = rect;
 
   clear(1.0f, 1.0f, 1.0f, 0.0f, 0.0f);
 }

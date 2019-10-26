@@ -7,13 +7,11 @@
 using namespace RLI;
 
 MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
-
   _state.peleng_count = qApp->property(PROPERTY_PELENG_COUNT).toInt();
   _state.peleng_size = qApp->property(PROPERTY_PELENG_SIZE).toInt();
 
   _ds_radar = new RadarDataSource(this);
   _ds_radar->start();
-
 }
 
 MainWidget::~MainWidget() {
@@ -25,8 +23,8 @@ MainWidget::~MainWidget() {
 
   killTimer(_timerId);
 
-  delete _radarLayer;
-  delete _program;
+  delete _lr_radar;
+  delete _lr_trail;
 }
 
 
@@ -47,34 +45,64 @@ void MainWidget::initializeGL() {
   glEnable(GL_TEXTURE_2D);
 
   _layout_manager.resize(size());
-  _radarLayer = new RadarEngine(_state, _layout_manager.layout(), context(), this);
 
-  glGenBuffers(ATTR_COUNT, _vbo_ids);
+  _projection.setToIdentity();
+  _projection.ortho(geometry());
 
-  _program = new QOpenGLShaderProgram(this);
   initProgram();
+  initBuffers();
+
+  _lr_radar = new RadarEngine(_state, layout(), context(), this);
+
+  _lr_trail = new RadarEngine(_state, layout(), context(), this);
+
 
   connect( _ds_radar, SIGNAL(updateRadarData(int, int, GLfloat*))
-         , _radarLayer, SLOT(updateData(int, int, GLfloat*))
+         , _lr_radar, SLOT(updateData(int, int, GLfloat*))
+         , Qt::QueuedConnection );
+
+  connect( _ds_radar, SIGNAL(updateTrailData(int, int, GLfloat*))
+         , _lr_trail, SLOT(updateData(int, int, GLfloat*))
          , Qt::QueuedConnection );
 
   _timerId = startTimer(33, Qt::CoarseTimer);
+}
+
+void MainWidget::initBuffers() {
+  glGenVertexArrays(1, &_vao_id);
+  glGenBuffers(ATTR_COUNT, _vbo_ids);
+
+  static const GLfloat vertices[] =  { -1.0f,  1.0f
+                                     , -1.0f, -1.0f
+                                     ,  1.0f,  1.0f
+                                     ,  1.0f, -1.0f  };
+
+  static const GLfloat texcoords[] = {  0.0f,  1.0f
+                                     ,  0.0f,  0.0f
+                                     ,  1.0f,  1.0f
+                                     ,  1.0f,  0.0f  };
+
+  glBindVertexArray(_vao_id);
+
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glVertexAttribPointer(_attr_locs[ATTR_POSITION], 2,  GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)) );
+  glEnableVertexAttribArray(_attr_locs[ATTR_POSITION]);
+
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_TEXCOORD]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
+  glVertexAttribPointer(_attr_locs[ATTR_TEXCOORD], 2,  GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)) );
+  glEnableVertexAttribArray(_attr_locs[ATTR_TEXCOORD]);
+
+  glBindVertexArray(0);
 }
 
 void MainWidget::resizeGL(int w, int h) {
   if (_timerId == -1)
     return;
 
-  QSize curr_size = _layout_manager.size();
-  _layout_manager.resize(QSize(w, h));
-  QSize new_size = _layout_manager.size();
-
-  if (new_size.width() <= 0 || new_size.height() <= 0) {
-    qDebug() << "Can not find suitable size for RLIDisplayWidget";
-    return;
-  }
-
-  if (curr_size == new_size)
+  // LayoutManager resize returns false if currentSize was not changed
+  if (!_layout_manager.resize(QSize(w, h)))
     return;
 
   _projection.setToIdentity();
@@ -83,9 +111,8 @@ void MainWidget::resizeGL(int w, int h) {
   if (_timerId == -1)
     return;
 
-  Layout* layout = _layout_manager.layout();
-
-  _radarLayer->resizeTexture(layout);
+  _lr_radar->resizeTexture(layout());
+  _lr_trail->resizeTexture(layout());
 }
 
 void MainWidget::paintGL() {
@@ -94,11 +121,13 @@ void MainWidget::paintGL() {
 
   updateLayers();
   paintLayers();
+
   glFlush();
 }
 
 void MainWidget::updateLayers() {
-  _radarLayer->updateTexture(_state);
+  _lr_radar->paint(_state, layout());
+  _lr_trail->paint(_state, layout());
 }
 
 void MainWidget::paintLayers() {
@@ -113,24 +142,22 @@ void MainWidget::paintLayers() {
   glClearColor(0.0f, 0.0f, 0.0f, 1.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  Layout* layout = _layout_manager.layout();
 
-  drawRect(layout->circle.box_rect, _radarLayer->textureId());
+  drawRect(_lr_radar->rect(), _lr_radar->texId());
+  drawRect(_lr_trail->rect(), _lr_trail->texId());
 }
 
 void MainWidget::initProgram() {
-  _program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/main.vert.glsl");
-  _program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/main.frag.glsl");
+  _program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/main.vert.glsl");
+  _program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/main.frag.glsl");
 
-  _program->link();
-  _program->bind();
+  _program.link();
+  _program.bind();
 
-  GLuint id = _program->programId();
+  _attr_locs[ATTR_POSITION] = static_cast<GLuint>(_program.attributeLocation( "position"));
+  _attr_locs[ATTR_TEXCOORD] = static_cast<GLuint>(_program.attributeLocation("texcoord"));
 
-  _attr_locs[ATTR_POSITION]   = static_cast<GLuint>(glGetAttribLocation(id, "position"));
-  _attr_locs[ATTR_TEXCOORD]   = static_cast<GLuint>(glGetAttribLocation(id, "texcoord"));
-
-  _program->release();
+  _program.release();
 }
 
 void MainWidget::drawRect(const QRectF& rect, GLuint textureId) {
@@ -139,12 +166,11 @@ void MainWidget::drawRect(const QRectF& rect, GLuint textureId) {
                                      , static_cast<float>(rect.right()), static_cast<float>(rect.bottom())
                                      , static_cast<float>(rect.right()), static_cast<float>(rect.top()) };
 
-  static const GLfloat texcoords[] = { 0.0f, 1.0f
-                                     , 0.0f, 0.0f
-                                     , 1.0f, 1.0f
-                                     , 1.0f, 0.0f };
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  _program->bind();
+  _program.bind();
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, textureId);
@@ -152,23 +178,17 @@ void MainWidget::drawRect(const QRectF& rect, GLuint textureId) {
   QMatrix4x4 transform;
   transform.setToIdentity();
 
-  _program->setUniformValue("texture", 0);
-  _program->setUniformValue("mvp_matrix", _projection*transform);
+  _program.setUniformValue("texture", 0);
+  _program.setUniformValue("mvp_matrix", _projection*transform);
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  glVertexAttribPointer(_attr_locs[ATTR_POSITION], 2,  GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)) );
-  glEnableVertexAttribArray(_attr_locs[ATTR_POSITION]);
-
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_TEXCOORD]);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords), texcoords, GL_STATIC_DRAW);
-  glVertexAttribPointer( _attr_locs[ATTR_TEXCOORD], 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)) );
-  glEnableVertexAttribArray(_attr_locs[ATTR_TEXCOORD]);
+  glBindVertexArray(_vao_id);
 
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+  glBindVertexArray(0);
 
   glBindTexture(GL_TEXTURE_2D, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  _program->release();
+  _program.release();
 }

@@ -13,58 +13,47 @@ LayoutManager:: LayoutManager(const QString& filename) {
   QFile file(filename);
   file.open(QFile::ReadOnly);
 
-  _currentSize = "0x0";
-
   QXmlStreamReader* xml = new QXmlStreamReader(&file);
 
   while (!xml->atEnd()) {
     if (xml->readNext() == QXmlStreamReader::StartElement) {
       QMap<QString, QString> attrs = readXMLAttributes(xml);
 
-      if (xml->name() == "layout") {
-        QString size_tag = attrs["size"];
-        _layouts.insert(size_tag, readLayout(parseSize(size_tag), xml));
-      }
+      if (xml->name() == "layouts")
+        _currentSize = parseSize(attrs.value("default", "0x0"));
+
+      if (xml->name() == "layout")
+        _layouts.insert(parseSize(attrs["size"]), readLayout(parseSize(attrs["size"]), xml));
     }
   }
 
   file.close();
+
+  if (_currentSize.isEmpty())
+    _currentSize = _layouts.keys().first();
 }
 
 LayoutManager::~LayoutManager() {
 }
 
-QSize LayoutManager::size() {
-  QSize sz = currentSize();
-  if ( currentSize().width() == 0
-    || currentSize().height() == 0 ) {
-    sz = parseSize(_layouts.keys()[0]);
-  }
-  return sz;
-}
-
-QSize LayoutManager::currentSize() {
-  return parseSize(_currentSize);
-}
-
-void LayoutManager::resize(const QSize& size) {
+bool LayoutManager::resize(const QSize& size) {
   int maxArea = 0;
-  QString best = "0x0";
+  QSize best(0, 0);
 
-  for (auto size_tag : _layouts.keys()) {
-    QSize sz = parseSize(size_tag);
-
+  for (auto sz : _layouts.keys()) {
     if (sz.width() <= size.width() && sz.height() <= size.height()) {
       int area(sz.width() * sz.height());
 
       if (area > maxArea) {
-        best = size_tag;
+        best = sz;
         maxArea = area;
       }
     }
   }
 
-  _currentSize = best;
+  if (!best.isEmpty())
+    _currentSize = best;
+  return !best.isEmpty();
 }
 
 QColor LayoutManager::parseColor(const QString& txt) const {

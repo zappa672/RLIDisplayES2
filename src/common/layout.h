@@ -10,9 +10,15 @@
 
 #include <QVector>
 #include <QMap>
+#include <QHash>
 
 #include <QXmlStreamReader>
 
+inline uint qHash(const QSize& s, uint seed)
+{ return uint(s.width()) ^ uint(s.height()) ^ seed; }
+
+inline uint qHash(const QSize& s)
+{ return qHash(s, 0); }
 
 namespace RLI {
 
@@ -92,23 +98,19 @@ namespace RLI {
     inline void insertPanel(const InfoPanelLayout& layout) { panels.insert(layout.name, layout); }
   };
 
-
-
   class  LayoutManager {
   public:
      LayoutManager(const QString& filename);
     ~LayoutManager(void);
 
-    QSize size();
-    void resize(const QSize& size);
+    inline const QSize& currentSize() const { return _currentSize; }
+    bool resize(const QSize& size);
 
-    inline Layout* layout() { return &_layouts[_currentSize == "0x0" ? _layouts.keys()[0] : _currentSize]; }
+    inline const Layout& layout() { return _layouts[_currentSize]; }
 
   private:
-    QSize currentSize();
-
-    QMap<QString, Layout> _layouts;
-    QString _currentSize;
+    QHash<QSize, Layout> _layouts;
+    QSize _currentSize;
 
     QMap<QString, QString> readXMLAttributes(QXmlStreamReader* xml);
 

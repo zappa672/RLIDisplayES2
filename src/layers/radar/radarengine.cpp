@@ -2,15 +2,10 @@
 
 #include "../../common/properties.h"
 
-#include <QFile>
-#include <QDateTime>
-
-#include <QOpenGLExtraFunctions>
-
 using namespace RLI;
 
-RadarEngine::RadarEngine(const State& state, Layout* layout, QOpenGLContext* context, QObject* parent)
-  : FboLayerBase(layout->circle.box_rect.size(), context, parent) {
+RadarEngine::RadarEngine(const State& state, const Layout& layout, QOpenGLContext* context, QObject* parent)
+  : FboLayerBase(layout.circle.box_rect, context, parent) {
 
   _palette = new RadarPalette(context, this);
 
@@ -109,8 +104,8 @@ void RadarEngine::initBuffers() {
   clearData();
 }
 
-void RadarEngine::resizeTexture(Layout* layout) {
-  FboLayerBase::resize(layout->circle.box_rect.size());
+void RadarEngine::resizeTexture(const Layout& layout) {
+  FboLayerBase::resize(layout.circle.box_rect);
 }
 
 void RadarEngine::clearData() {
@@ -149,16 +144,18 @@ QMatrix4x4 RadarEngine::getMVP(const State& state) {
 
   QMatrix4x4 view;
   view.setToIdentity();
-  view.translate(fboWidth() / 2.f, fboHeight() / 2.f);
+  view.translate(width() / 2.f, height() / 2.f);
 
   QMatrix4x4 projection;
   projection.setToIdentity();
-  projection.ortho(0.f, fboWidth(), 0.f, fboHeight(), -255.f, 255.f);
+  projection.ortho(0.f, width(), 0.f, height(), -255.f, 255.f);
 
   return projection*view*modelTransform;
 }
 
-void RadarEngine::updateTexture(const State& state) {
+void RadarEngine::paint(const State& state, const Layout& layout) {
+  Q_UNUSED(layout)
+
   if (QVector2D(_center_shift - state.center_shift).length() > 0.5f) {
     clearTexture();
     _center_shift = state.center_shift;
@@ -184,7 +181,7 @@ void RadarEngine::updateTexture(const State& state) {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_GREATER);
 
-  glViewport(0.f, 0.f, fboWidth(), fboHeight());
+  glViewport(0.f, 0.f, width(), height());
 
   glBindFramebuffer(GL_FRAMEBUFFER, fboId());
   glUseProgram(progId());

@@ -1,12 +1,8 @@
 #ifndef FBOLAYERBASE_H
 #define FBOLAYERBASE_H
 
-#include <QSize>
-#include <QObject>
-
+#include <QRect>
 #include "../common/layout.h"
-#include "../common/state.h"
-
 #include "layerbase.h"
 
 namespace RLI {
@@ -14,31 +10,33 @@ namespace RLI {
   class FboLayerBase : public LayerBase {
     Q_OBJECT
   public:
-    FboLayerBase(const QSize& size, QOpenGLContext* context, QObject* parent = nullptr);
+    FboLayerBase(const QRect& size, QOpenGLContext* context, QObject* parent = nullptr);
     virtual ~FboLayerBase();
 
-    inline const QSize&   fboSize()     const { return _fbo_size; }
-    inline const GLuint&  textureId()   const { return _fbo_tex_id; }
+    inline const QRect&   rect()    const { return _fbo_rect; }
 
-    inline int            fboWidth()    const { return _fbo_size.width(); }
-    inline int            fboHeight()   const { return _fbo_size.height(); }
+    inline       QSize    size()    const { return _fbo_rect.size(); }
+    inline const GLuint&  texId()   const { return _fbo_tex_id; }
+
+    inline int            width()   const { return _fbo_rect.width(); }
+    inline int            height()  const { return _fbo_rect.height(); }
 
   public slots:
-    virtual void resizeTexture(Layout* layout) =0;
-    virtual void updateTexture(const State& state) =0;
+    virtual void paint(const State& state, const Layout& layout) =0;
+    virtual void resizeTexture(const Layout& layout) =0;
     virtual void clearTexture() =0;
 
   protected:
     inline const GLuint&  fboId()   const { return _fbo_id; }
 
     void clear(float r, float g, float b, float a, float d);
-    virtual void resize(const QSize& size);
+    virtual void resize(const QRect& size);
 
   private:
     GLuint _fbo_id;
     GLuint _fbo_tex_id;
     GLuint _depth_rbo_id;        
-    QSize _fbo_size;
+    QRect _fbo_rect;
   };
 
 }

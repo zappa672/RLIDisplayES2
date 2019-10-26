@@ -3,12 +3,7 @@
 #include "../common/properties.h"
 
 #include <QApplication>
-#include <QThread>
-#include <fstream>
-#include <iostream>
-#include <algorithm>
-#include <stdint.h>
-#include <QDebug>
+#include <QtConcurrent/QtConcurrentRun>
 
 using namespace RLI;
 

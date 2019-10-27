@@ -9,6 +9,19 @@ QT       += core gui widgets opengl concurrent
 TARGET = RLIDisplayES2
 TEMPLATE = app
 
+
+unix:QMAKE_CXXFLAGS += -Wno-write-strings
+unix:QMAKE_CXXFLAGS += -Wno-unused-variable
+unix:QMAKE_CXXFLAGS += -std=gnu++11
+
+
+# include gdal
+# win32:QMAKE_LIBDIR += C:/GDAL/lib
+# win32:INCLUDEPATH += C:/GDAL/include
+# win32:LIBS += -lgdal_i -lgeos_i
+# unix:LIBS += -lgdal  -lrt
+
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the

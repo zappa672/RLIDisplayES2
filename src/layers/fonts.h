@@ -5,6 +5,7 @@
 #include <QMap>
 
 #include <QOpenGLFunctions>
+#include <QOpenGLTexture>
 
 namespace RLI {
 

@@ -154,6 +154,8 @@ void MaskEngine::paint(const State& state, const Layout& layout)  {
 
   glUseProgram(0);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  _forceUpdate = false;
 }
 
 
@@ -257,11 +259,9 @@ void MaskEngine::initTextBuffers() {
   QVector<GLfloat> orders[2];
   QVector<GLfloat> shifts[2];
 
-
   QTextEncoder* encoder = QTextCodec::codecForName("cp866")->makeEncoder();
-  //QTextDecoder* decoder = QTextCodec::codecForName("cp866")->makeDecoder();
 
-  for (int i = 0; i < 360; i += 10) {
+  for (int i = 0; i < 360; i += 10) {    
     QByteArray tm[2] { encoder->fromUnicode(QString::number(i))
                      , encoder->fromUnicode(QString::number(i > 180 ? 360-i : i)) };
 

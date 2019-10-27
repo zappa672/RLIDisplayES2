@@ -106,6 +106,7 @@ QMap<QString, QString> LayoutManager::readXMLAttributes(QXmlStreamReader* xml) {
 
 Layout LayoutManager::readLayout(const QSize& scrn_sz, QXmlStreamReader* xml) {
   Layout layout;
+  layout.size = scrn_sz;
 
   while (!xml->atEnd()) {
     switch (xml->readNext()) {

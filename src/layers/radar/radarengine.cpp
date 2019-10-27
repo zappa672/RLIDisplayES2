@@ -53,19 +53,19 @@ void RadarEngine::resizeData(int peleng_count, int peleng_size) {
 
   initBuffers();
 
-  //glBindVertexArray(_vao_id);
-  //
-  //glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
-  //glVertexAttribPointer(attrId(ATTR_POSITION), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
-  //glEnableVertexAttribArray(attrId(ATTR_POSITION));
-  //
-  //glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
-  //glVertexAttribPointer(attrId(ATTR_AMPLITUDE), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
-  //glEnableVertexAttribArray(attrId(ATTR_AMPLITUDE));
-  //
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
-  //
-  //glBindVertexArray(0);
+  glBindVertexArray(_vao_id);
+
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  glVertexAttribPointer(attrLoc(ATTR_POSITION), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
+  glEnableVertexAttribArray(attrLoc(ATTR_POSITION));
+
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
+  glVertexAttribPointer(attrLoc(ATTR_AMPLITUDE), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
+  glEnableVertexAttribArray(attrLoc(ATTR_AMPLITUDE));
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
+
+  glBindVertexArray(0);
 }
 
 void RadarEngine::initBuffers() {
@@ -177,36 +177,37 @@ void RadarEngine::paint(const State& state, const Layout& layout) {
 
 
   // --------------------------------------
+  glBindFramebuffer(GL_FRAMEBUFFER, fboId());
+
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_GREATER);
 
   glViewport(0.f, 0.f, width(), height());
 
-  glBindFramebuffer(GL_FRAMEBUFFER, fboId());
   glUseProgram(progId());
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, _palette->texture());
 
-  glUniform1i(unifId(UNIF_TEXTURE), 0);
-  glUniformMatrix4fv(unifId(UNIF_MVP_MATRIX), 1, GL_FALSE, getMVP(state).data());
-  glUniform1f(unifId(UNIF_THREASHOLD), 1.f);
+  glUniform1i(unifLoc(UNIF_TEXTURE), 0);
+  glUniformMatrix4fv(unifLoc(UNIF_MVP_MATRIX), 1, GL_FALSE, getMVP(state).data());
+  glUniform1f(unifLoc(UNIF_THREASHOLD), 1.f);
 
-  glUniform1f(unifId(UNIF_PELENG_SIZE), _peleng_size);
-  glUniform1f(unifId(UNIF_PELENG_COUNT), _peleng_count);
+  glUniform1f(unifLoc(UNIF_PELENG_SIZE), _peleng_size);
+  glUniform1f(unifLoc(UNIF_PELENG_COUNT), _peleng_count);
 
-  //glBindVertexArray(_vao_id);
+  glBindVertexArray(_vao_id);
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
-  glVertexAttribPointer(attrId(ATTR_POSITION), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
-  glEnableVertexAttribArray(attrId(ATTR_POSITION));
-
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
-  glVertexAttribPointer(attrId(ATTR_AMPLITUDE), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
-  glEnableVertexAttribArray(attrId(ATTR_AMPLITUDE));
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
+  //glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  //glVertexAttribPointer(attrLoc(ATTR_POSITION), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
+  //glEnableVertexAttribArray(attrLoc(ATTR_POSITION));
+  //
+  //glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_AMPLITUDE]);
+  //glVertexAttribPointer(attrLoc(ATTR_AMPLITUDE), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0 * sizeof(GLfloat)));
+  //glEnableVertexAttribArray(attrLoc(ATTR_AMPLITUDE));
+  //
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _eab_id);
 
   if (first_peleng_to_draw <= last_peleng_to_draw) {
     drawPelengs(first_peleng_to_draw, last_peleng_to_draw);
@@ -215,9 +216,9 @@ void RadarEngine::paint(const State& state, const Layout& layout) {
     drawPelengs(0, last_peleng_to_draw);
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  //glBindVertexArray(0);
+  //glBindBuffer(GL_ARRAY_BUFFER, 0);
+  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   glUseProgram(0);

@@ -90,6 +90,7 @@ namespace RLI {
 
 
   struct Layout {
+    QSize            size;
     CircleLayout     circle;
     MenuLayout       menu;
     MagnifierLayout  magnifier;

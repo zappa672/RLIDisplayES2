@@ -12,7 +12,10 @@
 
 #include "datasources/radardatasource.h"
 
+#include "layers/fonts.h"
+
 #include "layers/radar/radarengine.h"
+#include "layers/maskengine.h"
 
 namespace RLI {
 
@@ -31,13 +34,15 @@ namespace RLI {
     void paintGL() override;
 
   private:
+    void debugInfo();
+
     void updateLayers();
     void paintLayers();
 
     void initProgram();
     void initBuffers();
 
-    void drawRect(const QRectF& rect, GLuint textureId);
+    void drawRect(const QRect& rect, GLuint textureId);
 
     int _timerId = -1;
 
@@ -47,9 +52,12 @@ namespace RLI {
     inline const Layout& layout() { return _layout_manager.layout(); }
 
     RadarDataSource* _ds_radar;
+
+    Fonts* _fonts;
     \
     RadarEngine* _lr_radar;
     RadarEngine* _lr_trail;
+    MaskEngine* _lr_mask;
 
     QMatrix4x4 _projection;
 

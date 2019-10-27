@@ -29,7 +29,9 @@ SOURCES += \
   src/common/state.cpp \
   src/common/strings.cpp \
   src/common/triangulate.cpp \
+  src/layers/fonts.cpp \
   src/layers/layerbase.cpp \
+  src/layers/maskengine.cpp \
   src/layers/radar/radarengine.cpp \
   src/layers/radar/radarpalette.cpp \
   src/main.cpp \
@@ -45,7 +47,9 @@ HEADERS += \
   src/common/stringnames.h \
   src/common/strings.h \
   src/common/triangulate.h \
+  src/layers/fonts.h \
   src/layers/layerbase.h \
+  src/layers/maskengine.h \
   src/layers/radar/radarengine.h \
   src/layers/radar/radarpalette.h \
   src/mainwidget.h \

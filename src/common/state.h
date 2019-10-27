@@ -49,7 +49,7 @@ namespace RLI {
     // Radar parameters
 
     // Chart parameters
-    float       north_shift   { 45.0 };
+    double      north_shift   { 45.0 };
     RadarScale  radar_scale   { };
     QPoint      center_shift  { 100, 100 };
 

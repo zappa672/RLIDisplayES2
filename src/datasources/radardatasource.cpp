@@ -7,8 +7,7 @@
 
 using namespace RLI;
 
-RadarDataSource::RadarDataSource(QObject* parent) : QObject(parent) {
-  _timer_period        = qApp->property(PROPERTY_DATA_DELAY).toInt();
+RadarDataSource::RadarDataSource(int period, QObject* parent) : DataSourceBase(period, parent) {
   _blocks_to_send      = qApp->property(PROPERTY_BLOCK_SIZE).toInt();
   _peleng_size         = qApp->property(PROPERTY_PELENG_SIZE).toInt();
   _bearings_per_cycle  = qApp->property(PROPERTY_PELENG_COUNT).toInt();
@@ -30,17 +29,7 @@ RadarDataSource::~RadarDataSource() {
   delete file_amps2[1];
 }
 
-void RadarDataSource::start() {
-  if (_timerId == -1)
-    _timerId = startTimer(_timer_period, Qt::PreciseTimer);
-}
 
-void RadarDataSource::stop() {
-  if (_timerId != -1) {
-    killTimer(_timerId);
-    _timerId = -1;
-  }
-}
 
 void RadarDataSource::timerEvent(QTimerEvent* e) {
   Q_UNUSED(e)

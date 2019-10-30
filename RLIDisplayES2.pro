@@ -36,40 +36,46 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-  src/common/radarscale.cpp \
+  src/datasources/datasourcebase.cpp \
+  src/main.cpp \
+  src/mainwidget.cpp \
   src/common/layout.cpp \
   src/common/math.cpp \
+  src/common/radarscale.cpp \
   src/common/state.cpp \
   src/common/strings.cpp \
   src/common/triangulate.cpp \
+  src/datasources/radardatasource.cpp \
+  src/datasources/shipdatasource.cpp \
+  src/datasources/targetdatasource.cpp \
+  src/layers/fbolayerbase.cpp \
   src/layers/fonts.cpp \
   src/layers/layerbase.cpp \
   src/layers/magnifierengine.cpp \
   src/layers/maskengine.cpp \
   src/layers/radar/radarengine.cpp \
-  src/layers/radar/radarpalette.cpp \
-  src/main.cpp \
-  src/mainwidget.cpp \
-  src/datasources/radardatasource.cpp \
-  src/layers/fbolayerbase.cpp
+  src/layers/radar/radarpalette.cpp
 
 HEADERS += \
-  src/common/radarscale.h \
+  src/datasources/datasourcebase.h \
+  src/mainwidget.h \
   src/common/layout.h \
   src/common/math.h \
+  src/common/properties.h \
+  src/common/radarscale.h \
   src/common/state.h \
   src/common/strings.h \
   src/common/triangulate.h \
+  src/datasources/radardatasource.h \
+  src/datasources/shipdatasource.h \
+  src/datasources/targetdatasource.h \
+  src/layers/fbolayerbase.h \
   src/layers/fonts.h \
   src/layers/layerbase.h \
   src/layers/magnifierengine.h \
   src/layers/maskengine.h \
   src/layers/radar/radarengine.h \
-  src/layers/radar/radarpalette.h \
-  src/mainwidget.h \
-  src/common/properties.h \
-  src/datasources/radardatasource.h \  
-  src/layers/fbolayerbase.h
+  src/layers/radar/radarpalette.h
 
 FORMS +=
 

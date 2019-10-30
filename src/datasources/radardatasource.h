@@ -1,20 +1,17 @@
 #ifndef RADARDATASOURCE_H
 #define RADARDATASOURCE_H
 
-#include <QObject>
+#include "datasourcebase.h"
+
 #include <QOpenGLFunctions>
 
 namespace RLI {
 
-  class RadarDataSource : public QObject {
+  class RadarDataSource : public DataSourceBase {
     Q_OBJECT
   public:
-    explicit RadarDataSource(QObject* parent = nullptr);
+    explicit RadarDataSource(int period, QObject* parent = nullptr);
     virtual ~RadarDataSource();
-
-  public slots:
-    void start();
-    void stop();
 
   signals:
     void updateRadarData(int offset, int count, GLfloat* amps);
@@ -33,12 +30,9 @@ namespace RLI {
     bool initWithDummy3(float* amps);
     bool initWithDummy4(float* amps);
 
-    int _timerId = -1;
-
     GLfloat* file_amps1[2];
     GLfloat* file_amps2[2];
 
-    int _timer_period;
     int _blocks_to_send;
 
     int _file = 0;

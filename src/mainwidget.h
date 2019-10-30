@@ -11,6 +11,8 @@
 #include "common/layout.h"
 
 #include "datasources/radardatasource.h"
+#include "datasources/shipdatasource.h"
+#include "datasources/targetdatasource.h"
 
 #include "layers/fonts.h"
 
@@ -53,6 +55,8 @@ namespace RLI {
     inline const Layout& layout() { return _layout_manager.layout(); }
 
     RadarDataSource* _ds_radar;
+    ShipDataSource* _ds_ship;
+    TargetDataSource* _ds_trgt;
 
     Fonts* _fonts;
     \

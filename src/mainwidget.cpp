@@ -13,8 +13,14 @@ MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
   _state.peleng_count = qApp->property(PROPERTY_PELENG_COUNT).toInt();
   _state.peleng_size = qApp->property(PROPERTY_PELENG_SIZE).toInt();
 
-  _ds_radar = new RadarDataSource(this);
+  _ds_radar = new RadarDataSource(qApp->property(PROPERTY_DATA_DELAY).toInt(), this);
   _ds_radar->start();
+
+  _ds_ship = new ShipDataSource(1000, this);
+  _ds_ship->start();
+
+  _ds_trgt = new TargetDataSource(1000, this);
+  _ds_trgt->start();
 
   setFocusPolicy(Qt::StrongFocus);
   setFocus();
@@ -25,6 +31,12 @@ MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
 MainWidget::~MainWidget() {
   _ds_radar->stop();
   delete _ds_radar;
+
+  _ds_ship->stop();
+  delete _ds_ship;
+
+  _ds_trgt->stop();
+  delete _ds_trgt;
 
   if (_timerId == -1)
     return;

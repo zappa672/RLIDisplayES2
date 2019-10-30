@@ -16,6 +16,7 @@
 
 #include "layers/radar/radarengine.h"
 #include "layers/maskengine.h"
+#include "layers/magnifierengine.h"
 
 namespace RLI {
 
@@ -58,6 +59,7 @@ namespace RLI {
     RadarEngine* _lr_radar;
     RadarEngine* _lr_trail;
     MaskEngine* _lr_mask;
+    MagnifierEngine* _lr_magn;
 
     QMatrix4x4 _projection;
 

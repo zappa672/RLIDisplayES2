@@ -36,6 +36,7 @@ MainWidget::~MainWidget() {
   delete _lr_radar;
   delete _lr_trail;
   delete _lr_mask;
+  delete _lr_magn;
 }
 
 void MainWidget::debugInfo() {
@@ -105,6 +106,10 @@ void MainWidget::initializeGL() {
   _lr_mask = new MaskEngine(_state, layout(), _fonts, context(), this);
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Mask engine init finish";
 
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Magnifier engine init start";
+  _lr_magn = new MagnifierEngine(_state, layout(), _lr_radar->ampsVboId(), _lr_radar->paletteTexId(), context(), this);
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Magnifier engine init start";
+
   //-------------------------------------------------------------
 
   connect( _ds_radar, SIGNAL(updateRadarData(int, int, GLfloat*))
@@ -165,6 +170,7 @@ void MainWidget::resizeGL(int w, int h) {
   _lr_radar->resizeTexture(layout());
   _lr_trail->resizeTexture(layout());
   _lr_mask->resizeTexture(layout());
+  _lr_magn->resizeTexture(layout());
 }
 
 void MainWidget::paintGL() {
@@ -181,6 +187,7 @@ void MainWidget::updateLayers() {
   _lr_radar->paint(_state, layout());
   _lr_trail->paint(_state, layout());
   _lr_mask->paint(_state, layout());
+  _lr_magn->paint(_state, layout());
 }
 
 void MainWidget::paintLayers() {
@@ -211,6 +218,8 @@ void MainWidget::paintLayers() {
   drawRect(_lr_trail->rect(), _lr_trail->texId());
 
   drawRect(_lr_mask->rect(), _lr_mask->texId());
+
+  drawRect(_lr_magn->rect(), _lr_magn->texId());
 
   glBindVertexArray(0);
 

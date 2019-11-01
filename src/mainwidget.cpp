@@ -76,6 +76,8 @@ void MainWidget::timerEvent(QTimerEvent*) {
 }
 
 void MainWidget::initializeGL() {
+  QOpenGLWidget::initializeGL();
+
   if (_timerId != -1)
     return;
 
@@ -166,6 +168,8 @@ void MainWidget::initBuffers() {
 }
 
 void MainWidget::resizeGL(int w, int h) {
+  QOpenGLWidget::resizeGL(w, h);
+
   if (_timerId == -1)
     return;
 

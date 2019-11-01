@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
   QGLFormat::setDefaultFormat(format);
 
   RLI::MainWidget w;
+  w.show();
   w.showFullScreen();
 
   return a.exec();

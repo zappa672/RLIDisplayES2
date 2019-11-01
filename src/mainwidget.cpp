@@ -173,15 +173,15 @@ void MainWidget::resizeGL(int w, int h) {
 
   QOpenGLWidget::resizeGL(w, h);
 
+  _projection.setToIdentity();
+  _projection.ortho(geometry());
+
   if (_timerId == -1)
     return;
 
   // LayoutManager resize returns false if currentSize was not changed
   if (!_layout_manager.resize(QSize(w, h)))
     return;
-
-  _projection.setToIdentity();
-  _projection.ortho(geometry());
 
   if (_timerId == -1)
     return;

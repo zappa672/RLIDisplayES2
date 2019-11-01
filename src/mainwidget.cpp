@@ -94,6 +94,7 @@ void MainWidget::initializeGL() {
   glEnable(GL_TEXTURE_2D);
 
   _layout_manager.resize(size());
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << "initializeGL" << size() << layout().size;
 
   _projection.setToIdentity();
   _projection.ortho(geometry());
@@ -168,6 +169,8 @@ void MainWidget::initBuffers() {
 }
 
 void MainWidget::resizeGL(int w, int h) {
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << "resizGL" << QSize(w, h) << layout().size;
+
   QOpenGLWidget::resizeGL(w, h);
 
   if (_timerId == -1)
@@ -192,6 +195,8 @@ void MainWidget::resizeGL(int w, int h) {
 void MainWidget::paintGL() {
   if (_timerId == -1)
     return;
+
+  //qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << "paintGL" << width() << height() << layout().size;
 
   updateLayers();
   paintLayers();

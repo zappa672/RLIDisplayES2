@@ -5,6 +5,18 @@
 #include <QDateTime>
 #include <QApplication>
 
+#include "datasources/radardatasource.h"
+#include "datasources/shipdatasource.h"
+#include "datasources/targetdatasource.h"
+
+#include "layers/layerbase.h"
+
+#include "layers/maskengine.h"
+#include "layers/magnifierengine.h"
+#include "layers/maskengine.h"
+#include "layers/radar/radarengine.h"
+
+
 using namespace RLI;
 
 MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
@@ -13,14 +25,12 @@ MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
   _state.peleng_count = qApp->property(PROPERTY_PELENG_COUNT).toInt();
   _state.peleng_size = qApp->property(PROPERTY_PELENG_SIZE).toInt();
 
-  _ds_radar = new RadarDataSource(qApp->property(PROPERTY_DATA_DELAY).toInt(), this);
-  _ds_radar->start();
+  _data_sources.insert(DataSources::Radar, new RadarDataSource(qApp->property(PROPERTY_DATA_DELAY).toInt(), this));
+  _data_sources.insert(DataSources::Ship, new ShipDataSource(1000, this));
+  _data_sources.insert(DataSources::Targets, new TargetDataSource(1000, this));
 
-  _ds_ship = new ShipDataSource(1000, this);
-  _ds_ship->start();
-
-  _ds_trgt = new TargetDataSource(1000, this);
-  _ds_trgt->start();
+  for (auto ds: _data_sources)
+    ds->start();
 
   setFocusPolicy(Qt::StrongFocus);
   setFocus();
@@ -29,26 +39,31 @@ MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
 }
 
 MainWidget::~MainWidget() {
-  _ds_radar->stop();
-  delete _ds_radar;
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "~MainWidget start";
 
-  _ds_ship->stop();
-  delete _ds_ship;
-
-  _ds_trgt->stop();
-  delete _ds_trgt;
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete datasources";
+  for (auto ds: _data_sources) {
+    ds->stop();
+    delete ds;
+  }
 
   if (_timerId == -1)
     return;
 
   killTimer(_timerId);
 
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete fonts";
   delete _fonts;
 
-  delete _lr_radar;
-  delete _lr_trail;
-  delete _lr_mask;
-  delete _lr_magn;
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete simple layers";
+  for (auto lr: _simple_layers)
+    delete lr;
+
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete fbo layers";
+  for (auto lr: _fbo_layers)
+    delete lr;
+
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "~MainWidget finish";
 }
 
 void MainWidget::debugInfo() {
@@ -110,29 +125,32 @@ void MainWidget::initializeGL() {
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Fonts init finish";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Radar engine init start";
-  _lr_radar = new RadarEngine(_state, layout(), context(), this);
+  _fbo_layers.insert(FboLayers::Radar, new RadarEngine(_state, layout(), context(), this));
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Radar engine init finish";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Trail engine init start";
-  _lr_trail = new RadarEngine(_state, layout(), context(), this);
+  _fbo_layers.insert(FboLayers::Trail, new RadarEngine(_state, layout(), context(), this));
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Trail engine init finish";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Mask engine init start";
-  _lr_mask = new MaskEngine(_state, layout(), _fonts, context(), this);
+  _fbo_layers.insert(FboLayers::Mask, new MaskEngine(_state, layout(), _fonts, context(), this));
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Mask engine init finish";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Magnifier engine init start";
-  _lr_magn = new MagnifierEngine(_state, layout(), _lr_radar->ampsVboId(), _lr_radar->paletteTexId(), context(), this);
+  MagnifierEngine* magnEngine = new MagnifierEngine(_state , layout(), context(), this);
+  magnEngine->setAmplitudesVboId(static_cast<RadarEngine*>(_fbo_layers[FboLayers::Radar])->ampsVboId());
+  magnEngine->setPaletteTextureId(static_cast<RadarEngine*>(_fbo_layers[FboLayers::Radar])->paletteTexId());
+  _fbo_layers.insert(FboLayers::Magnifier, magnEngine);
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Magnifier engine init start";
 
   //-------------------------------------------------------------
 
-  connect( _ds_radar, SIGNAL(updateRadarData(int, int, GLfloat*))
-         , _lr_radar, SLOT(updateData(int, int, GLfloat*))
+  connect( static_cast<RadarDataSource*>(_data_sources[DataSources::Radar]), SIGNAL(updateRadarData(int, int, GLfloat*))
+         , static_cast<RadarEngine*>(_fbo_layers[FboLayers::Radar]), SLOT(updateData(int, int, GLfloat*))
          , Qt::QueuedConnection );
 
-  connect( _ds_radar, SIGNAL(updateTrailData(int, int, GLfloat*))
-         , _lr_trail, SLOT(updateData(int, int, GLfloat*))
+  connect( static_cast<RadarDataSource*>(_data_sources[DataSources::Radar]), SIGNAL(updateTrailData(int, int, GLfloat*))
+         , static_cast<RadarEngine*>(_fbo_layers[FboLayers::Trail]), SLOT(updateData(int, int, GLfloat*))
          , Qt::QueuedConnection );
 
   //-------------------------------------------------------------
@@ -169,7 +187,7 @@ void MainWidget::initBuffers() {
 }
 
 void MainWidget::resizeGL(int w, int h) {
-  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << "resizGL" << QSize(w, h) << layout().size;
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << "resizeGL" << QSize(w, h) << layout().size;
 
   QOpenGLWidget::resizeGL(w, h);
 
@@ -186,32 +204,17 @@ void MainWidget::resizeGL(int w, int h) {
   if (_timerId == -1)
     return;
 
-  _lr_radar->resizeTexture(layout());
-  _lr_trail->resizeTexture(layout());
-  _lr_mask->resizeTexture(layout());
-  _lr_magn->resizeTexture(layout());
+  for (auto lr : _fbo_layers)
+    lr->resizeTexture(layout());
 }
 
 void MainWidget::paintGL() {
   if (_timerId == -1)
     return;
 
-  //qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << "paintGL" << width() << height() << layout().size;
+  for (auto lr : _fbo_layers)
+    lr->paint(_state, layout());
 
-  updateLayers();
-  paintLayers();
-
-  glFlush();
-}
-
-void MainWidget::updateLayers() {
-  _lr_radar->paint(_state, layout());
-  _lr_trail->paint(_state, layout());
-  _lr_mask->paint(_state, layout());
-  _lr_magn->paint(_state, layout());
-}
-
-void MainWidget::paintLayers() {
   glEnable(GL_BLEND);
   glDisable(GL_DEPTH_TEST);
 
@@ -235,16 +238,14 @@ void MainWidget::paintLayers() {
 
   glBindVertexArray(_vao_id);
 
-  drawRect(_lr_radar->rect(), _lr_radar->texId());
-  drawRect(_lr_trail->rect(), _lr_trail->texId());
-
-  drawRect(_lr_mask->rect(), _lr_mask->texId());
-
-  drawRect(_lr_magn->rect(), _lr_magn->texId());
+  for (auto lr : _fbo_layers)
+    drawRect(lr->rect(), lr->texId());
 
   glBindVertexArray(0);
 
   _program.release();
+
+  glFlush();
 }
 
 

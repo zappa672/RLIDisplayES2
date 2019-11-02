@@ -45,62 +45,31 @@ void RadarDataSource::timerEvent(QTimerEvent* e) {
 
 
 
-bool RadarDataSource::loadData() {
-  if (!initWithDummy1(file_amps1[0]))
-    return false;
+void RadarDataSource::loadData() {
+  initDummy(file_amps1[0], [&](int i, int j) {
+      return (i % 256 < 9 || i % 256 > 247) ? (255.f * j) / _peleng_size : 0.f;
+    });
 
-  if (!initWithDummy2(file_amps1[1]))
-    return false;
+  initDummy(file_amps1[1], [&](int i, int j) {
+      return (j > 259 && j < 268) ? 255.f - (255.f * i) / _bearings_per_cycle : 0.f;
+    });
 
-  if (!initWithDummy3(file_amps2[1]))
-    return false;
+  initDummy(file_amps2[1], [&](int i, int j) {
+      return (i % 256 < 137 && i % 256 > 121) ? (255.f * j) / _peleng_size : 0.f;
+    });
 
-  if (!initWithDummy4(file_amps2[0]))
-    return false;
-
-  return true;
+  initDummy(file_amps2[0], [&](int i, int j) {
+      return (j > 131 && j < 140) ? 255.f - (255.f * i) / _bearings_per_cycle : 0.f;
+    });
 }
 
-bool RadarDataSource::initWithDummy1(GLfloat* amps) {
-  for (int i = 0; i < _bearings_per_cycle; i++)
-    for (int j = 0; j < _peleng_size; j++)
-      if (i % 256 < 9 || i % 256 > 247)
-        amps[i*_peleng_size+j] = (255.f * j) / _peleng_size;
-      else
-        amps[i*_peleng_size+j] = 0.f;
 
-  return true;
+bool loadObserves(GLfloat* amps, char* filename) {
+
 }
 
-bool RadarDataSource::initWithDummy2(GLfloat* amps) {
+void RadarDataSource::initDummy(GLfloat* amps, std::function<float(int, int)> func) {
   for (int i = 0; i < _bearings_per_cycle; i++)
     for (int j = 0; j < _peleng_size; j++)
-      if (j > 259 && j < 268)
-        amps[i*_peleng_size+j] = 255.f - (255.f * i) / _bearings_per_cycle;
-      else
-        amps[i*_peleng_size+j] = 0.f;
-
-  return true;
-}
-
-bool RadarDataSource::initWithDummy3(GLfloat* amps) {
-  for (int i = 0; i < _bearings_per_cycle; i++)
-    for (int j = 0; j < _peleng_size; j++)
-      if (i % 256 < 137 && i % 256 > 121)
-        amps[i*_peleng_size+j] = (255.f * j) / _peleng_size;
-      else
-        amps[i*_peleng_size+j] = 0.f;
-
-  return true;
-}
-
-bool RadarDataSource::initWithDummy4(GLfloat* amps) {
-  for (int i = 0; i < _bearings_per_cycle; i++)
-    for (int j = 0; j < _peleng_size; j++)
-      if (j > 131 && j < 140)
-        amps[i*_peleng_size+j] = 255.f - (255.f * i) / _bearings_per_cycle;
-      else
-        amps[i*_peleng_size+j] = 0.f;
-
-  return true;
+      amps[i*_peleng_size+j] = func(i, j);
 }

@@ -2,13 +2,10 @@
 
 using namespace RLI;
 
-MagnifierEngine::MagnifierEngine(const State&, const Layout& layout, GLuint amps_vbo_id, GLuint palette_tex_id, QOpenGLContext* context, QObject* parent)
+MagnifierEngine::MagnifierEngine(const State&, const Layout& layout, QOpenGLContext* context, QObject* parent)
   : FboLayerBase(layout.magnifier.geometry, context, parent) {
 
   initializeOpenGLFunctions();
-
-  _amp_vbo_id = amps_vbo_id;
-  _pal_tex_id = palette_tex_id;
 
   glGenBuffers(ATTR_COUNT, _vbo_ids_border);
   glGenBuffers(ATTR_COUNT, _vbo_ids_radar);
@@ -43,6 +40,9 @@ void MagnifierEngine::clearTexture() {
 }
 
 void MagnifierEngine::paint(const State& s, const Layout&) {
+  if (_amp_vbo_id == -1 || _pal_tex_id == -1)
+    return;
+
   glBindFramebuffer(GL_FRAMEBUFFER, fboId());
 
   glDisable(GL_DEPTH_TEST);
@@ -62,7 +62,7 @@ void MagnifierEngine::paint(const State& s, const Layout&) {
   glUniform1i(unifLoc(UNIF_TEXTURE), 0);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, _pal_tex_id);
+  glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(_pal_tex_id));
 
   drawPelengs(s.peleng_size, s.peleng_count, s.magn_min_peleng, s.magn_min_rad);
   drawBorder();
@@ -83,7 +83,7 @@ void MagnifierEngine::drawPelengs(int pel_len, int pel_cnt, int min_pel, int min
 
     int amp_shift = ((min_pel + i) % pel_cnt) * pel_len + min_rad;
 
-    glBindBuffer(GL_ARRAY_BUFFER, _amp_vbo_id);
+    glBindBuffer(GL_ARRAY_BUFFER, static_cast<GLuint>(_amp_vbo_id));
     glVertexAttribPointer(attrLoc(ATTR_AMPLITUDE), 1, GL_FLOAT, GL_FALSE, 0, (void*) (amp_shift * sizeof(GLfloat)));
     glEnableVertexAttribArray(attrLoc(ATTR_AMPLITUDE));
 

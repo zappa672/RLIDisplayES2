@@ -10,17 +10,31 @@
 #include "common/state.h"
 #include "common/layout.h"
 
-#include "datasources/radardatasource.h"
-#include "datasources/shipdatasource.h"
-#include "datasources/targetdatasource.h"
+#include "datasources/datasourcebase.h"
 
 #include "layers/fonts.h"
 
-#include "layers/radar/radarengine.h"
-#include "layers/maskengine.h"
-#include "layers/magnifierengine.h"
+#include "layers/layerbase.h"
+#include "layers/fbolayerbase.h"
 
 namespace RLI {
+
+  enum class DataSources : int
+  { Radar   = 0
+  , Ship    = 1
+  , Targets = 2 };
+
+  enum class SimpleLayers : int
+  { Controls  = 0
+  , Path      = 1
+  , Targets   = 2 };
+
+  enum class FboLayers : int
+  { Radar     = 0
+  , Trail     = 1
+  , Mask      = 2
+  , Magnifier = 3
+  , Info      = 4 };
 
   class MainWidget : public QOpenGLWidget, protected QOpenGLExtraFunctions
   {
@@ -39,9 +53,6 @@ namespace RLI {
   private:
     void debugInfo();
 
-    void updateLayers();
-    void paintLayers();
-
     void initProgram();
     void initBuffers();
 
@@ -54,20 +65,16 @@ namespace RLI {
     LayoutManager _layout_manager  { "layouts.xml" };
     inline const Layout& layout() { return _layout_manager.layout(); }
 
-    RadarDataSource* _ds_radar;
-    ShipDataSource* _ds_ship;
-    TargetDataSource* _ds_trgt;
+    QMap<DataSources, DataSourceBase*> _data_sources;
 
     Fonts* _fonts;
-    \
-    RadarEngine* _lr_radar;
-    RadarEngine* _lr_trail;
-    MaskEngine* _lr_mask;
-    MagnifierEngine* _lr_magn;
+
+    QMap<SimpleLayers, LayerBase*> _simple_layers;
+    QMap<FboLayers, FboLayerBase*> _fbo_layers;
 
     QMatrix4x4 _projection;
 
-    QOpenGLShaderProgram _program { this };
+    QOpenGLShaderProgram _program;
     enum { ATTR_POSITION = 0
          , ATTR_TEXCOORD = 1
          , ATTR_COUNT = 2 } ;

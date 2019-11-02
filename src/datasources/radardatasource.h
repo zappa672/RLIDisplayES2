@@ -21,14 +21,9 @@ namespace RLI {
     void timerEvent(QTimerEvent* e);
 
   private:
-    bool loadData();
-
-    bool loadObserves1(char* filename, GLfloat* amps);
-
-    bool initWithDummy1(float* amps);
-    bool initWithDummy2(float* amps);
-    bool initWithDummy3(float* amps);
-    bool initWithDummy4(float* amps);
+    void loadData();
+    void loadObserves(GLfloat* amps, char* filename);
+    void initDummy(GLfloat* amps, std::function<GLfloat(int, int)> func);
 
     GLfloat* file_amps1[2];
     GLfloat* file_amps2[2];

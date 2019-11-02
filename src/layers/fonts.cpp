@@ -3,6 +3,7 @@
 #include <QPixmap>
 #include <QDebug>
 #include <QDir>
+#include <QDateTime>
 
 #include <QGLWidget>
 

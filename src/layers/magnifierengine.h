@@ -14,8 +14,11 @@ namespace RLI {
     Q_OBJECT
 
   public:
-    MagnifierEngine(const State& state, const Layout& layout, GLuint amps_vbo_id, GLuint palette_tex_id, QOpenGLContext* context, QObject* parent = nullptr);
+    MagnifierEngine(const State& state, const Layout& layout, QOpenGLContext* context, QObject* parent = nullptr);
     virtual ~MagnifierEngine() override;
+
+    inline void setAmplitudesVboId(GLuint vboId) { _amp_vbo_id = static_cast<GLint>(vboId); }
+    inline void setPaletteTextureId(GLuint texId) { _pal_tex_id = static_cast<GLint>(texId); }
 
   public slots:
     void paint(const State& state, const Layout& layout) override;
@@ -29,8 +32,8 @@ namespace RLI {
     void drawBorder();
     void drawPelengs(int pel_len, int pel_cnt, int min_pel, int min_rad);
 
-    GLuint _amp_vbo_id;
-    GLuint _pal_tex_id;
+    GLint _amp_vbo_id = -1;
+    GLint _pal_tex_id = -1;
 
     // -----------------------------------------------
 

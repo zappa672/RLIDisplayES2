@@ -3,6 +3,7 @@
 #include <QGLFormat>
 
 #include "common/properties.h"
+#include "common/strings.h"
 
 #include "mainwidget.h"
 

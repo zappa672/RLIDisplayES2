@@ -6,6 +6,8 @@
 #include <QByteArray>
 #include <QTextEncoder>
 
+#include <QObject>
+
 namespace RLI {
 
   enum class Lang : int {
@@ -13,11 +15,11 @@ namespace RLI {
   , RUSSIAN  = 1
   , COUNT    = 2 };
 
-  enum class StrId;
+  enum class StrId;  
 
   class Strings {
-  public:
-    static Strings& instance() {
+  public:    
+    static Strings& instance() {            
       static Strings instance;
       return instance;
     }

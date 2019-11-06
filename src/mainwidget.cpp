@@ -52,6 +52,9 @@ MainWidget::~MainWidget() {
   for (auto lr: _tex_layers)
     delete lr;
 
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete info layer";
+  delete _info_layer;
+
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "~MainWidget finish";
 }
 
@@ -108,7 +111,6 @@ void MainWidget::initializeGL() {
 
   // Layers initialization
   //-------------------------------------------------------------
-
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Fonts init start";
   _fonts = new Fonts(context(), "assets/textures/fonts");
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Fonts init finish";
@@ -132,6 +134,13 @@ void MainWidget::initializeGL() {
   _tex_layers.insert(TextureLayer::Magnifier, magnEngine);
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Magnifier engine init start";
 
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Menu engine init start";
+  _tex_layers.insert(TextureLayer::Menu, new MenuEngine(layout(), _fonts, context(), this));
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Menu engine init start";
+
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Info engine init start";
+  _info_layer = new InfoEngine(layout(), context(), _fonts, this);
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Info engine init start";
   //-------------------------------------------------------------
 
   connect( radarDS(), SIGNAL(updateRadarData(int, int, GLfloat*))
@@ -195,15 +204,24 @@ void MainWidget::resizeGL(int w, int h) {
 
   for (auto lr : _tex_layers)
     lr->resizeTexture(layout());
+
+  _info_layer->resize(layout());
 }
 
 void MainWidget::paintGL() {
   if (_timerId == -1)
     return;
 
+  // Update offscreen layers
+  // -----------------------------------
   for (auto lr : _tex_layers)
     lr->paint(_state, layout());
 
+  _info_layer->update(_state, layout());
+  // -----------------------------------
+
+  // Fill widget
+  // -----------------------------------
   glEnable(GL_BLEND);
   glDisable(GL_DEPTH_TEST);
 
@@ -215,28 +233,29 @@ void MainWidget::paintGL() {
   glClearColor(0.0f, 0.0f, 0.0f, 1.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  QMatrix4x4 transform;
-  transform.setToIdentity();
-
   _program.bind();
+  glBindVertexArray(_vao_id);
 
   glActiveTexture(GL_TEXTURE0);
 
   _program.setUniformValue("texture", 0);
-  _program.setUniformValue("mvp_matrix", _projection*transform);
+  _program.setUniformValue("mvp_matrix", _projection);
 
-  glBindVertexArray(_vao_id);
+  drawRect(radarLayer()->geometry(), radarLayer()->texId());
+  drawRect(trailLayer()->geometry(), trailLayer()->texId());
 
-  drawRect(radarLayer()->rect(), radarLayer()->texId());
-  drawRect(trailLayer()->rect(), trailLayer()->texId());
+  drawRect(maskLayer()->geometry(), maskLayer()->texId());
 
-  drawRect(maskLayer()->rect(), maskLayer()->texId());
+  drawRect(menuLayer()->geometry(), menuLayer()->texId());
 
-  drawRect(magnifierLayer()->rect(), magnifierLayer()->texId());
+  //drawRect(magnifierLayer()->geometry(), magnifierLayer()->texId());
+
+  for (auto block: _info_layer->blocks())
+    drawRect(block.second->geometry(), block.second->texId());
 
   glBindVertexArray(0);
-
   _program.release();
+  // -----------------------------------
 
   glFlush();
 }

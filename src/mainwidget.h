@@ -22,6 +22,8 @@
 #include "layers/magnifierengine.h"
 #include "layers/maskengine.h"
 #include "layers/radar/radarengine.h"
+#include "layers/info/infoengine.h"
+#include "layers/info/menuengine.h"
 
 namespace RLI {
 
@@ -40,8 +42,7 @@ namespace RLI {
   , Trail       = 1
   , Mask        = 2
   , Magnifier   = 3
-  , Menu        = 4
-  , Info        = 5 };
+  , Menu        = 4 };
 
   class MainWidget : public QOpenGLWidget, protected QOpenGLExtraFunctions
   {
@@ -65,14 +66,15 @@ namespace RLI {
 
     void drawRect(const QRect& rect, GLuint textureId);
 
-    inline RadarDataSource*   radarDS()   { return static_cast<RadarDataSource*>(_data_sources[DataSource::Radar]); }
-    inline ShipDataSource*    shipDS()    { return static_cast<ShipDataSource*>(_data_sources[DataSource::Ship]); }
+    inline RadarDataSource*   radarDS()   { return static_cast<RadarDataSource*>(_data_sources[DataSource::Radar]);   }
+    inline ShipDataSource*    shipDS()    { return static_cast<ShipDataSource*>(_data_sources[DataSource::Ship]);     }
     inline TargetDataSource*  targetDS()  { return static_cast<TargetDataSource*>(_data_sources[DataSource::Target]); }
 
-    inline RadarEngine* radarLayer() { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Radar]); }
-    inline RadarEngine* trailLayer() { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Trail]); }
-    inline MaskEngine* maskLayer() { return static_cast<MaskEngine*>(_tex_layers[TextureLayer::Mask]); }
-    inline MagnifierEngine* magnifierLayer() { return static_cast<MagnifierEngine*>(_tex_layers[TextureLayer::Magnifier]); }
+    inline RadarEngine*     radarLayer()      { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Radar]);         }
+    inline RadarEngine*     trailLayer()      { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Trail]);         }
+    inline MaskEngine*      maskLayer()       { return static_cast<MaskEngine*>(_tex_layers[TextureLayer::Mask]);           }
+    inline MenuEngine*      menuLayer()       { return static_cast<MenuEngine*>(_tex_layers[TextureLayer::Menu]);           }
+    inline MagnifierEngine* magnifierLayer()  { return static_cast<MagnifierEngine*>(_tex_layers[TextureLayer::Magnifier]); }
 
     int _timerId = -1;
 
@@ -85,6 +87,7 @@ namespace RLI {
 
     Fonts* _fonts;
 
+    InfoEngine* _info_layer;
     QMap<SimpleLayer, LayerBase*> _simple_layers;
     QMap<TextureLayer, TextureLayerBase*> _tex_layers;
 

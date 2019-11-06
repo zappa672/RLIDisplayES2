@@ -23,7 +23,7 @@ namespace RLI {
 
   class MenuEngine : public TextureLayerBase {
     Q_OBJECT
-
+    Q_ENUM(StrId)
   public:
     MenuEngine(const Layout& layout, const Fonts* fonts, QOpenGLContext* context, QObject* parent = nullptr);
     virtual ~MenuEngine() override;

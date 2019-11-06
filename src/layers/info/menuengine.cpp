@@ -17,6 +17,9 @@ static const QColor MENU_BACKGRD_COLOR       (0x00, 0x00, 0x00);
 
 MenuEngine::MenuEngine(const Layout& layout, const Fonts* fonts, QOpenGLContext* context, QObject* parent)
   : TextureLayerBase(layout.menu.geometry ,context, parent), _fonts(fonts)  {
+
+  qRegisterMetaType<StrId>("StrId");
+
   _selected_line = 1;
   _selection_active = false;
 
@@ -40,7 +43,7 @@ MenuEngine::MenuEngine(const Layout& layout, const Fonts* fonts, QOpenGLContext*
   initMainMenuTree();
   initCnfgMenuTree();
 
-  _menu = nullptr;
+  _menu = _main_menu;
   _last_action_time = QDateTime::currentDateTime();
   _font_tag = layout.menu.font;
   _need_update = true;
@@ -81,7 +84,7 @@ void MenuEngine::initCnfgMenuTree() {
   i105->addVariant(StrId::ARRAY_BAND_S);
   i105->addVariant(StrId::ARRAY_BAND_K);
   m10->add_item(static_cast<MenuItem*>(i105));
-  connect(i105, SIGNAL(valueChanged(RLIString)), this, SIGNAL(bandModeChanged(RLIString)), Qt::QueuedConnection);
+  connect(i105, SIGNAL(valueChanged(StrId)), this, SIGNAL(bandModeChanged(StrId)), Qt::QueuedConnection);
 
   MenuItemList* i106 = new MenuItemList(StrId::MENU_106, 0);
   i106->addVariant(StrId::ARRAY_OFFON_OFF);
@@ -261,7 +264,7 @@ void MenuEngine::initMainMenuTree() {
   i013->addVariant(StrId::ARRAY_TRACK_6);
   i013->addVariant(StrId::ARRAY_TRACK_12);
   m01->add_item(static_cast<MenuItem*>(i013));
-  connect(i013, SIGNAL(valueChanged(RLIString)), this, SIGNAL(tailsModeChanged(RLIString)), Qt::QueuedConnection);
+  connect(i013, SIGNAL(valueChanged(StrId)), this, SIGNAL(tailsModeChanged(StrId)), Qt::QueuedConnection);
 
   MenuItemList* i014 = new MenuItemList(StrId::MENU_014, 1);
   i014->addVariant(StrId::ARRAY_OFFON_OFF);
@@ -316,7 +319,7 @@ void MenuEngine::initMainMenuTree() {
   MenuItemList* i026 = new MenuItemList(StrId::MENU_026, 1);
   i026->addVariant(StrId::ARRAY_LANG_ENGL);
   i026->addVariant(StrId::ARRAY_LANG_RUS);
-  connect(i026, SIGNAL(valueChanged(RLIString)), this, SIGNAL(languageChanged(RLIString)), Qt::QueuedConnection);
+  connect(i026, SIGNAL(valueChanged(StrId)), this, SIGNAL(languageChanged(StrId)), Qt::QueuedConnection);
   m02->add_item(i026);
 
   MenuItemReal* i027 = new MenuItemReal(StrId::MENU_027, 0.0, 359.9, 0.0);
@@ -345,7 +348,7 @@ void MenuEngine::initMainMenuTree() {
   MenuItemList* i031 = new MenuItemList(StrId::MENU_031, 0);
   i031->addVariant(StrId::ARRAY_OFFON_OFF);
   i031->addVariant(StrId::ARRAY_OFFON_ON);
-  connect(i031, SIGNAL(valueChanged(RLIString)), this, SIGNAL(simulationChanged(RLIString)), Qt::QueuedConnection);
+  connect(i031, SIGNAL(valueChanged(StrId)), this, SIGNAL(simulationChanged(StrId)), Qt::QueuedConnection);
   m03->add_item(static_cast<MenuItem*>(i031));
 
   MenuItemList* i032 = new MenuItemList(StrId::MENU_032, 1);

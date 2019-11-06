@@ -13,7 +13,7 @@ namespace RLI {
     TextureLayerBase(const QRect& size, QOpenGLContext* context, QObject* parent = nullptr);
     virtual ~TextureLayerBase();
 
-    inline const QRect&   rect()    const { return _fbo_rect; }
+    inline const QRect&   geometry()    const { return _fbo_rect; }
 
     inline       QSize    size()    const { return _fbo_rect.size(); }
     inline const GLuint&  texId()   const { return _fbo_tex_id; }

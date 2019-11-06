@@ -61,15 +61,14 @@ void InfoBlock::paint(const State&, const Layout&) {
   if (!_need_update)
     return;
 
-  glBindFramebuffer(GL_FRAMEBUFFER, fboId());
-
   glDisable(GL_DEPTH_TEST);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, fboId());
+  glUseProgram(progId());
 
   glViewport(0.f, 0.f, width(), height());
 
-  glUseProgram(progId());
-
-  glClearColor(0.12f, 0.13f, 0.10f, 1.0f);
+  glClearColor(0.12f, 0.63f, 0.10f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
   //_prog->setUniformValue(_uniform_locs[INFO_UNIF_MVP], _projection);
@@ -83,7 +82,7 @@ void InfoBlock::paint(const State&, const Layout&) {
 }
 
 void InfoBlock::resizeTexture(const Layout& layout) {
-  TextureLayerBase::resize(QRect(QPoint(0,0), layout.size));
+  TextureLayerBase::resize(layout.panels[_panel_id].geometry);
   parseLayout(layout.panels[_panel_id]);
   _projection.setToIdentity();
   _projection.ortho(0.f, width(), 0.f, height(), -1.f, 1.f);

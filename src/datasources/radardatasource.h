@@ -22,11 +22,10 @@ namespace RLI {
 
   private:
     void loadData();
-    void loadObserves(GLfloat* amps, char* filename);
+    void loadObserves(GLfloat* amps, const char* filename);
     void initDummy(GLfloat* amps, std::function<GLfloat(int, int)> func);
 
-    GLfloat* file_amps1[2];
-    GLfloat* file_amps2[2];
+    GLfloat* _amps[4];
 
     int _blocks_to_send;
 

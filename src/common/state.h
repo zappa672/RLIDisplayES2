@@ -5,6 +5,7 @@
 #include <QPoint>
 
 #include "radarscale.h"
+#include "strings.h"
 #include "math.h"
 
 namespace RLI {
@@ -35,6 +36,8 @@ namespace RLI {
 
 
   struct State {
+    Lang lang  { Lang::RUSSIAN };
+
     DepthUnit   depth_unit   { DepthUnit::METER };
     WidgetState state        { WidgetState::DEFAULT };
     Orientation orientation  { Orientation::NORTH };
@@ -51,7 +54,7 @@ namespace RLI {
     // Chart parameters
     double      north_shift   { 45.0 };
     RadarScale  radar_scale   { };
-    QPoint      center_shift  { 100, 100 };
+    QPoint      center_shift  { -120, 80 };
 
     // Ship parameters
     GeoPos  ship_position     { 0, 0 };
@@ -69,8 +72,9 @@ namespace RLI {
     bool    show_parallel     { false };
 
     // Radar parameters
-    int peleng_count    { 4096 };
-    int peleng_size     { 800  };
+    int peleng_count      { 4096 };
+    int peleng_size       { 800  };
+    float amp_threashold  { 8.f  };
 
     // Magnifier parameters
     int magn_min_rad    { 96  };

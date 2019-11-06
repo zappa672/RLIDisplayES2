@@ -40,10 +40,10 @@ static const Scale scales[APCTRL_SNDPULSE_TYPES][APCTRL_SCALE_NUM] =
 
 RadarScale::RadarScale() {
   sndpls  = SoundingPulses::SHORT;
-  current = getScale(12.0, sndpls);
+  _current = getScale(12.0, sndpls);
 
-  if (current == nullptr)
-    current = &scales[static_cast<int>(sndpls)][0];
+  if (_current == nullptr)
+    _current = &scales[static_cast<int>(sndpls)][0];
 }
 
 SoundingPulses RadarScale::getNextSndPlsType(SoundingPulses sndpls) {
@@ -80,21 +80,16 @@ const Scale* RadarScale::getScale(double len, SoundingPulses sndpls) {
   return pscale;
 }
 
-
-const Scale *RadarScale::getCurScale(void) {
-  return current;
-}
-
 int RadarScale::nextScale(void) {
   const Scale* nsc = nullptr; // Pointer to a new scale
 
-  if (current == nullptr) {
+  if (_current == nullptr) {
       sndpls  = SoundingPulses::SHORT;
-      current = getScale(12.0, sndpls);
-      nsc = current;
+      _current = getScale(12.0, sndpls);
+      nsc = _current;
   } else {
     for (int i = 0; i < APCTRL_SCALE_NUM - 1; i++) {
-      if (current == &scales[static_cast<int>(sndpls)][i]) {
+      if (_current == &scales[static_cast<int>(sndpls)][i]) {
         nsc = &scales[static_cast<int>(sndpls)][i + 1];
 
         if (nsc->sndpls == SoundingPulses::NONE) {
@@ -108,20 +103,20 @@ int RadarScale::nextScale(void) {
   if (nsc == nullptr)
     return 1;
 
-  current = nsc;
+  _current = nsc;
   return 0;
 }
 
 int RadarScale::prevScale(void) {
   const Scale*  nsc = nullptr; // Pointer to a new scale
 
-  if(current == nullptr) {
+  if (_current == nullptr) {
     sndpls  = SoundingPulses::SHORT;
-    current = getScale(12.0, sndpls);
-    nsc = current;
+    _current = getScale(12.0, sndpls);
+    nsc = _current;
   } else {
     for (int i = 1; i < APCTRL_SCALE_NUM; i++) {
-      if (current == &scales[static_cast<int>(sndpls)][i]) {
+      if (_current == &scales[static_cast<int>(sndpls)][i]) {
         nsc = &scales[static_cast<int>(sndpls)][i - 1];
 
         if (nsc->sndpls == SoundingPulses::NONE) {
@@ -135,6 +130,6 @@ int RadarScale::prevScale(void) {
   if(nsc == nullptr)
     return 1;
 
-  current = nsc;
+  _current = nsc;
   return 0;
 }

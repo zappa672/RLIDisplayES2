@@ -4,31 +4,9 @@
 #include <QVector2D>
 #include <QPoint>
 
+#include "structures.h"
+
 namespace RLI {
-
-  struct GeoPos {
-    double lat, lon;
-
-    inline QVector2D toVec2D() {
-      return QVector2D { static_cast<float>(lat), static_cast<float>(lon) };
-    }
-
-    GeoPos(double latitude, double longtitude):
-      lat{latitude},
-      lon{longtitude}
-    {}
-
-    GeoPos(const QVector2D& v):
-      lat{static_cast<double>(v.x())},
-      lon{static_cast<double>(v.y())}
-    {}
-
-    GeoPos(QVector2D&& v):
-      lat{static_cast<double>(v.x())},
-      lon{static_cast<double>(v.y())}
-    {}
-  };
-
 
   namespace Math {
     constexpr double EPS        = 0.000000000005;

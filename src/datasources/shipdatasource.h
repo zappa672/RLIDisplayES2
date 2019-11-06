@@ -3,14 +3,9 @@
 
 #include "datasourcebase.h"
 
-#include "../common/math.h"
+#include "../common/structures.h"
 
 namespace RLI {
-  struct ShipState {
-    GeoPos position  { 0.0, 0.0 };
-    double course    { 0.0 };
-    double speed     { 0.0 };
-  };
 
   class ShipDataSource : public DataSourceBase
   {

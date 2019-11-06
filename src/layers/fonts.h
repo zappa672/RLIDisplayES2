@@ -15,8 +15,8 @@ namespace RLI {
     Fonts(QOpenGLContext* context, const QString& dirPath);
     virtual ~Fonts();
 
-    inline GLuint texture(const QString& tag)   { return _textures.value(tag, DEFAULT).first; }
-    inline QSize  fontSize(const QString& tag)  { return _textures.value(tag, DEFAULT).second; }
+    inline GLuint texture(const QString& tag)   const { return _textures.value(tag, DEFAULT).first; }
+    inline QSize  fontSize(const QString& tag)  const { return _textures.value(tag, DEFAULT).second; }
 
   private:
     const std::pair<GLuint, QSize> DEFAULT { 0, QSize(0,0) };

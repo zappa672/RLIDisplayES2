@@ -14,27 +14,34 @@
 
 #include "layers/fonts.h"
 
-#include "layers/layerbase.h"
-#include "layers/fbolayerbase.h"
+#include "datasources/radardatasource.h"
+#include "datasources/shipdatasource.h"
+#include "datasources/targetdatasource.h"
+
+#include "layers/maskengine.h"
+#include "layers/magnifierengine.h"
+#include "layers/maskengine.h"
+#include "layers/radar/radarengine.h"
 
 namespace RLI {
 
-  enum class DataSources : int
+  enum class DataSource : int
   { Radar   = 0
   , Ship    = 1
-  , Targets = 2 };
+  , Target  = 2 };
 
-  enum class SimpleLayers : int
+  enum class SimpleLayer : int
   { Controls  = 0
   , Path      = 1
   , Targets   = 2 };
 
-  enum class FboLayers : int
-  { Radar     = 0
-  , Trail     = 1
-  , Mask      = 2
-  , Magnifier = 3
-  , Info      = 4 };
+  enum class TextureLayer : int
+  { Radar       = 0
+  , Trail       = 1
+  , Mask        = 2
+  , Magnifier   = 3
+  , Menu        = 4
+  , Info        = 5 };
 
   class MainWidget : public QOpenGLWidget, protected QOpenGLExtraFunctions
   {
@@ -58,6 +65,15 @@ namespace RLI {
 
     void drawRect(const QRect& rect, GLuint textureId);
 
+    inline RadarDataSource*   radarDS()   { return static_cast<RadarDataSource*>(_data_sources[DataSource::Radar]); }
+    inline ShipDataSource*    shipDS()    { return static_cast<ShipDataSource*>(_data_sources[DataSource::Ship]); }
+    inline TargetDataSource*  targetDS()  { return static_cast<TargetDataSource*>(_data_sources[DataSource::Target]); }
+
+    inline RadarEngine* radarLayer() { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Radar]); }
+    inline RadarEngine* trailLayer() { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Trail]); }
+    inline MaskEngine* maskLayer() { return static_cast<MaskEngine*>(_tex_layers[TextureLayer::Mask]); }
+    inline MagnifierEngine* magnifierLayer() { return static_cast<MagnifierEngine*>(_tex_layers[TextureLayer::Magnifier]); }
+
     int _timerId = -1;
 
     State _state;
@@ -65,12 +81,12 @@ namespace RLI {
     LayoutManager _layout_manager  { "layouts.xml" };
     inline const Layout& layout() { return _layout_manager.layout(); }
 
-    QMap<DataSources, DataSourceBase*> _data_sources;
+    QMap<DataSource, DataSourceBase*> _data_sources;
 
     Fonts* _fonts;
 
-    QMap<SimpleLayers, LayerBase*> _simple_layers;
-    QMap<FboLayers, FboLayerBase*> _fbo_layers;
+    QMap<SimpleLayer, LayerBase*> _simple_layers;
+    QMap<TextureLayer, TextureLayerBase*> _tex_layers;
 
     QMatrix4x4 _projection;
 

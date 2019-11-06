@@ -7,13 +7,13 @@
 #include <QVector>
 #include <QMap>
 
-#include "fbolayerbase.h"
+#include "texturelayerbase.h"
 
 #include "fonts.h"
 
 namespace RLI {
 
-  class MaskEngine : public FboLayerBase {
+  class MaskEngine : public TextureLayerBase {
     Q_OBJECT
   public:
     MaskEngine(const State& state, const Layout& layout, Fonts* fonts, QOpenGLContext* context, QObject* parent = nullptr);

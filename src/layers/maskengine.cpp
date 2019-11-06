@@ -11,7 +11,7 @@ static double const PI = acos(-1);
 using namespace RLI;
 
 MaskEngine::MaskEngine(const State& state, const Layout& layout, Fonts* fonts, QOpenGLContext* context, QObject* parent)
-    : FboLayerBase(QRect(QPoint(0,0), layout.size), context, parent) {
+    : TextureLayerBase(QRect(QPoint(0,0), layout.size), context, parent) {
 
   initializeOpenGLFunctions();
 
@@ -62,12 +62,12 @@ MaskEngine::~MaskEngine() {
 }
 
 void MaskEngine::resizeTexture(const Layout& layout) {
-  FboLayerBase::resize(QRect(QPoint(0,0), layout.size));
+  TextureLayerBase::resize(QRect(QPoint(0,0), layout.size));
   _forceUpdate = true;
 }
 
 void MaskEngine::clearTexture() {
-  FboLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
+  TextureLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
 }
 
 void MaskEngine::paint(const State& state, const Layout& layout)  {

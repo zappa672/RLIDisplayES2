@@ -37,6 +37,11 @@ CONFIG += c++11
 
 SOURCES += \
   src/datasources/datasourcebase.cpp \
+  src/layers/info/infoblock.cpp \
+  src/layers/info/infoengine.cpp \
+  src/layers/info/menuengine.cpp \
+  src/layers/info/menuitem.cpp \
+  src/layers/texturelayerbase.cpp \
   src/main.cpp \
   src/mainwidget.cpp \
   src/common/layout.cpp \
@@ -48,7 +53,6 @@ SOURCES += \
   src/datasources/radardatasource.cpp \
   src/datasources/shipdatasource.cpp \
   src/datasources/targetdatasource.cpp \
-  src/layers/fbolayerbase.cpp \
   src/layers/fonts.cpp \
   src/layers/layerbase.cpp \
   src/layers/magnifierengine.cpp \
@@ -57,7 +61,13 @@ SOURCES += \
   src/layers/radar/radarpalette.cpp
 
 HEADERS += \
+  src/common/structures.h \
   src/datasources/datasourcebase.h \
+  src/layers/info/infoblock.h \
+  src/layers/info/infoengine.h \
+  src/layers/info/menuengine.h \
+  src/layers/info/menuitem.h \
+  src/layers/texturelayerbase.h \
   src/mainwidget.h \
   src/common/layout.h \
   src/common/math.h \
@@ -69,7 +79,6 @@ HEADERS += \
   src/datasources/radardatasource.h \
   src/datasources/shipdatasource.h \
   src/datasources/targetdatasource.h \
-  src/layers/fbolayerbase.h \
   src/layers/fonts.h \
   src/layers/layerbase.h \
   src/layers/magnifierengine.h \
@@ -85,6 +94,16 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
+  assets/pelengs/r1nm3h0_4096 \
+  assets/pelengs/r1nm6h0_4096 \
+  assets/textures/fonts/F12X14B.png \
+  assets/textures/fonts/F14X14B.png \
+  assets/textures/fonts/F16X14B.png \
+  assets/textures/fonts/F16X28B.png \
+  assets/textures/fonts/F16X32B.png \
+  assets/textures/fonts/F16X40B.png \
+  assets/textures/fonts/F8X14B.png \
+  assets/textures/fonts/F8X8B.png \
   layouts.xml
 
 RESOURCES += \

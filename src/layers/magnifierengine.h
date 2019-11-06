@@ -6,11 +6,11 @@
 #include <QSize>
 #include <QMap>
 
-#include "fbolayerbase.h"
+#include "texturelayerbase.h"
 
 namespace RLI {
 
-  class MagnifierEngine : public FboLayerBase {
+  class MagnifierEngine : public TextureLayerBase {
     Q_OBJECT
 
   public:

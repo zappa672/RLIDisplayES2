@@ -8,5 +8,7 @@
         <file>shaders/mask.vert.glsl</file>
         <file>shaders/magn.frag.glsl</file>
         <file>shaders/magn.vert.glsl</file>
+        <file>shaders/info.vert.glsl</file>
+        <file>shaders/info.frag.glsl</file>
     </qresource>
 </RCC>

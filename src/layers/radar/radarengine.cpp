@@ -5,7 +5,7 @@
 using namespace RLI;
 
 RadarEngine::RadarEngine(const State& state, const Layout& layout, QOpenGLContext* context, QObject* parent)
-  : FboLayerBase(layout.circle.box_rect, context, parent) {
+  : TextureLayerBase(layout.circle.box_rect, context, parent) {
 
   _palette = new RadarPalette(context, this);
 
@@ -37,7 +37,7 @@ RadarEngine::~RadarEngine() {
 }
 
 void RadarEngine::clearTexture() {
-  FboLayerBase::clear(0.f, 0.f, 0.f, 0.f, 0.f);
+  TextureLayerBase::clear(0.f, 0.f, 0.f, 0.f, 0.f);
 }
 
 void RadarEngine::onBrightnessChanged(int br) {
@@ -105,7 +105,7 @@ void RadarEngine::initBuffers() {
 }
 
 void RadarEngine::resizeTexture(const Layout& layout) {
-  FboLayerBase::resize(layout.circle.box_rect);
+  TextureLayerBase::resize(layout.circle.box_rect);
 }
 
 void RadarEngine::clearData() {
@@ -192,7 +192,7 @@ void RadarEngine::paint(const State& state, const Layout& layout) {
 
   glUniform1i(unifLoc(UNIF_TEXTURE), 0);
   glUniformMatrix4fv(unifLoc(UNIF_MVP_MATRIX), 1, GL_FALSE, getMVP(state).data());
-  glUniform1f(unifLoc(UNIF_THREASHOLD), 1.f);
+  glUniform1f(unifLoc(UNIF_THREASHOLD), state.amp_threashold);
 
   glUniform1f(unifLoc(UNIF_PELENG_SIZE), _peleng_size);
   glUniform1f(unifLoc(UNIF_PELENG_COUNT), _peleng_count);

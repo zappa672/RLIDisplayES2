@@ -2,33 +2,12 @@
 #define TARGETDATASOURCE_H
 
 #include "datasourcebase.h"
+
+#include "../common/structures.h"
+
 #include <QVector>
 
 namespace RLI {
-
-  struct Target {
-    Target() { }
-
-    Target(const Target& o) :
-      lost        { o.lost },
-      latitude    { o.latitude },
-      longtitude  { o.longtitude },
-      heading     { o.heading },
-      rotation    { o.rotation },
-      course_grnd { o.course_grnd },
-      speed_grnd  { o.speed_grnd }
-    { }
-
-    ~Target() { }
-
-    bool lost          { false };
-    double latitude    { 0 };
-    double longtitude  { 0 };
-    double heading     { 0 };
-    double rotation    { 0 };
-    double course_grnd { 0 };
-    double speed_grnd  { 0 };
-  };
 
   class TargetDataSource : public DataSourceBase
   {

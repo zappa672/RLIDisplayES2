@@ -1,6 +1,8 @@
 #include "menuitem.h"
 
-RLIMenuItem::RLIMenuItem(RLIString name, QObject* parent) : QObject(parent) {
+using namespace RLI;
+
+MenuItem::MenuItem(StrId name, QObject* parent) : QObject(parent) {
   _enabled = true;
   _locked = false;
   _name = name;
@@ -8,41 +10,40 @@ RLIMenuItem::RLIMenuItem(RLIString name, QObject* parent) : QObject(parent) {
 
 
 
-RLIMenuItemMenu::RLIMenuItemMenu(RLIString name, RLIMenuItemMenu* parent) : RLIMenuItem(name, parent) {
-  _type = MENU;
+MenuItemMenu::MenuItemMenu(StrId name, MenuItemMenu* parent) : MenuItem(name, parent) {
+  _type = Type::MENU;
   _parent = parent;
 }
 
-RLIMenuItemMenu::~RLIMenuItemMenu() {
+MenuItemMenu::~MenuItemMenu() {
   qDeleteAll(_items);
 }
 
 
 
-RLIMenuItemAction::RLIMenuItemAction(RLIString name, QObject* parent) : RLIMenuItem(name, parent) {
-  _type = ACTION;
+MenuItemAction::MenuItemAction(StrId name, QObject* parent) : MenuItem(name, parent) {
+  _type = Type::ACTION;
 }
 
-void RLIMenuItemAction::action() {
+void MenuItemAction::action() {
   emit triggered();
 }
 
 
 
-RLIMenuItemList::RLIMenuItemList(RLIString name, int def_ind, QObject* parent)
-  : RLIMenuItem(name, parent) {
-  _type = LIST;
+MenuItemList::MenuItemList(StrId name, int def_ind, QObject* parent) : MenuItem(name, parent) {
+  _type = Type::LIST;
   _index = def_ind;
 }
 
-void RLIMenuItemList::up() {
+void MenuItemList::up() {
   if (_index < _variants.size() - 1) {
     _index++;
     emit valueChanged(_variants[_index]);
   }
 }
 
-void RLIMenuItemList::down() {
+void MenuItemList::down() {
   if (_index > 0) {
     _index--;
     emit valueChanged(_variants[_index]);
@@ -51,9 +52,8 @@ void RLIMenuItemList::down() {
 
 
 
-RLIMenuItemInt::RLIMenuItemInt(RLIString name, int min, int max, int def, QObject* parent)
-  : RLIMenuItem(name, parent) {
-  _type = INT;
+MenuItemInt::MenuItemInt(StrId name, int min, int max, int def, QObject* parent) : MenuItem(name, parent) {
+  _type = Type::INT;
 
   _min = min;
   _max = max;
@@ -65,7 +65,7 @@ RLIMenuItemInt::RLIMenuItemInt(RLIString name, int min, int max, int def, QObjec
   _delta=1;
 }
 
-void RLIMenuItemInt::up() {
+void MenuItemInt::up() {
   if (_value < _max) {
     adjustDelta();
 
@@ -78,7 +78,7 @@ void RLIMenuItemInt::up() {
   }
 }
 
-void RLIMenuItemInt::down() {
+void MenuItemInt::down() {
   if (_value > _min) {
     adjustDelta();
 
@@ -91,7 +91,7 @@ void RLIMenuItemInt::down() {
   }
 }
 
-int RLIMenuItemInt::setValue(int val) {
+int MenuItemInt::setValue(int val) {
   if((val < _min) || (val > _max))
     return -2;
 
@@ -99,7 +99,7 @@ int RLIMenuItemInt::setValue(int val) {
   return 0;
 }
 
-int RLIMenuItemInt::setValue(QByteArray val) {
+int MenuItemInt::setValue(QByteArray val) {
   int  res;
   bool ok = false;
 
@@ -113,7 +113,7 @@ int RLIMenuItemInt::setValue(QByteArray val) {
   return 0;
 }
 
-void RLIMenuItemInt::adjustDelta() {
+void MenuItemInt::adjustDelta() {
   QDateTime currentTime = QDateTime::currentDateTime();
 
   if (currentTime > _last_change_time.addSecs(1)) {
@@ -136,10 +136,20 @@ void RLIMenuItemInt::adjustDelta() {
 
 
 
-RLIMenuItemFloat::RLIMenuItemFloat(RLIString name, float min, float max, float def) : RLIMenuItem(name) {
-  _type = FLOAT;
+MenuItemReal::MenuItemReal(StrId name, double min, double max, double def) : MenuItem(name) {
+  _type = Type::REAL;
   _min = min;
   _max = max;
   _value = def;
   _step = 0.2f;
+}
+
+void MenuItemReal::up() {
+  if (_value + _step < _max)
+    _value += _step;
+}
+
+void MenuItemReal::down() {
+  if (_value - _step > _min)
+    _value -= _step;
 }

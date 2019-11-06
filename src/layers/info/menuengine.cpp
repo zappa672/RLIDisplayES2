@@ -3,6 +3,9 @@
 
 #include <QColor>
 
+using namespace RLI;
+
+
 static const QColor MENU_LOCKED_ITEM_COLOR   (0xB4, 0xB4, 0xB4);
 static const QColor MENU_DISABLED_ITEM_COLOR (0xFC, 0x54, 0x54);
 static const QColor MENU_TEXT_STATIC_COLOR   (0x00, 0xFC, 0xFC);
@@ -12,183 +15,187 @@ static const QColor MENU_BORDER_COLOR        (0x40, 0xFC, 0x00);
 static const QColor MENU_BACKGRD_COLOR       (0x00, 0x00, 0x00);
 
 
-MenuEngine::MenuEngine(const RLIMenuLayout& layout, QOpenGLContext* context, QObject* parent)
-  : QObject(parent), QOpenGLFunctions(context)  {
-
-  initializeOpenGLFunctions();
-
+MenuEngine::MenuEngine(const Layout& layout, const Fonts* fonts, QOpenGLContext* context, QObject* parent)
+  : TextureLayerBase(layout.menu.geometry ,context, parent), _fonts(fonts)  {
   _selected_line = 1;
   _selection_active = false;
 
-  _prog = new QOpenGLShaderProgram();
-  _fbo = nullptr;
+  _projection.setToIdentity();
+  _projection.ortho(0.f, width(), 0.f, height(), -1.f, 1.f);
 
-  _lang = RLI_LANG_RUSSIAN;
+  glGenBuffers(ATTR_COUNT, _vbo_ids);
 
-  resize(layout);
+  static const QMap<QString, int> attr_inices
+  { { "position", ATTR_POSITION }
+  , { "order",    ATTR_ORDER    }
+  , { "char_val", ATTR_CHAR_VAL } };
 
-  glGenBuffers(INFO_ATTR_COUNT, _vbo_ids);
-  initShader();
+  static const QMap<QString, int> unif_inices
+  { { "mvp_matrix", UNIF_MVP    }
+  , { "color",      UNIF_COLOR  }
+  , { "size",       UNIF_SIZE   } };
+
+  initShaderProgram(":/shaders/info", attr_inices, unif_inices);
 
   initMainMenuTree();
   initCnfgMenuTree();
 
   _menu = nullptr;
-  //_routeEngine = nullptr;
   _last_action_time = QDateTime::currentDateTime();
+  _font_tag = layout.menu.font;
   _need_update = true;
 }
 
 void MenuEngine::initCnfgMenuTree() {
-  RLIMenuItemMenu* m1 = new RLIMenuItemMenu(RLI_STR_MENU_1, nullptr);
+  MenuItemMenu* m1 = new MenuItemMenu(StrId::MENU_1, nullptr);
 
   // --------------------------
-  RLIMenuItemMenu* m10 = new RLIMenuItemMenu(RLI_STR_MENU_10, m1);
+  MenuItemMenu* m10 = new MenuItemMenu(StrId::MENU_10, m1);
   m1->add_item(m10);
 
-  RLIMenuItemList* i100 = new RLIMenuItemList(RLI_STR_MENU_100, 4);
-  i100->addVariant(RLI_STR_ARRAY_LOG_SIGNAL_200_MINUS);
-  i100->addVariant(RLI_STR_ARRAY_LOG_SIGNAL_500_MINUS);
-  i100->addVariant(RLI_STR_ARRAY_LOG_SIGNAL_COD_MINUS);
-  i100->addVariant(RLI_STR_ARRAY_LOG_SIGNAL_NMEA);
-  i100->addVariant(RLI_STR_ARRAY_LOG_SIGNAL_COD_PLUS);
-  i100->addVariant(RLI_STR_ARRAY_LOG_SIGNAL_500_PLUS);
-  i100->addVariant(RLI_STR_ARRAY_LOG_SIGNAL_200_PLUS);
-  i100->addVariant(RLI_STR_ARRAY_LOG_SIGNAL_GPS);
-  m10->add_item(static_cast<RLIMenuItem*>(i100));
+  MenuItemList* i100 = new MenuItemList(StrId::MENU_100, 4);
+  i100->addVariant(StrId::ARRAY_LOG_SIGNAL_200_MINUS);
+  i100->addVariant(StrId::ARRAY_LOG_SIGNAL_500_MINUS);
+  i100->addVariant(StrId::ARRAY_LOG_SIGNAL_COD_MINUS);
+  i100->addVariant(StrId::ARRAY_LOG_SIGNAL_NMEA);
+  i100->addVariant(StrId::ARRAY_LOG_SIGNAL_COD_PLUS);
+  i100->addVariant(StrId::ARRAY_LOG_SIGNAL_500_PLUS);
+  i100->addVariant(StrId::ARRAY_LOG_SIGNAL_200_PLUS);
+  i100->addVariant(StrId::ARRAY_LOG_SIGNAL_GPS);
+  m10->add_item(static_cast<MenuItem*>(i100));
 
-  RLIMenuItemInt* i101 = new RLIMenuItemInt(RLI_STR_MENU_101, 0, 255, 0);
-  m10->add_item(static_cast<RLIMenuItem*>(i101));
+  MenuItemInt* i101 = new MenuItemInt(StrId::MENU_101, 0, 255, 0);
+  m10->add_item(static_cast<MenuItem*>(i101));
 
-  RLIMenuItemFloat* i102 = new RLIMenuItemFloat(RLI_STR_MENU_102, -179.9f, 179.9f, 0.f);
-  m10->add_item(static_cast<RLIMenuItem*>(i102));
+  MenuItemReal* i102 = new MenuItemReal(StrId::MENU_102, -179.9, 179.9, 0.);
+  m10->add_item(static_cast<MenuItem*>(i102));
 
-  RLIMenuItemFloat* i103 = new RLIMenuItemFloat(RLI_STR_MENU_103, 0.f, 359.9f, 0.f);
-  m10->add_item(static_cast<RLIMenuItem*>(i103));
+  MenuItemReal* i103 = new MenuItemReal(StrId::MENU_103, 0.0, 359.9, 0.0);
+  m10->add_item(static_cast<MenuItem*>(i103));
 
-  RLIMenuItemFloat* i104 = new RLIMenuItemFloat(RLI_STR_MENU_104, 0.f, 359.9f, 0.f);
-  m10->add_item(static_cast<RLIMenuItem*>(i104));
+  MenuItemReal* i104 = new MenuItemReal(StrId::MENU_104, 0.0, 359.9, 0.0);
+  m10->add_item(static_cast<MenuItem*>(i104));
 
-  RLIMenuItemList* i105 = new RLIMenuItemList(RLI_STR_MENU_105, 0);
-  i105->addVariant(RLI_STR_ARRAY_BAND_X);
-  i105->addVariant(RLI_STR_ARRAY_BAND_S);
-  i105->addVariant(RLI_STR_ARRAY_BAND_K);
-  m10->add_item(static_cast<RLIMenuItem*>(i105));
+  MenuItemList* i105 = new MenuItemList(StrId::MENU_105, 0);
+  i105->addVariant(StrId::ARRAY_BAND_X);
+  i105->addVariant(StrId::ARRAY_BAND_S);
+  i105->addVariant(StrId::ARRAY_BAND_K);
+  m10->add_item(static_cast<MenuItem*>(i105));
   connect(i105, SIGNAL(valueChanged(RLIString)), this, SIGNAL(bandModeChanged(RLIString)), Qt::QueuedConnection);
 
-  RLIMenuItemList* i106 = new RLIMenuItemList(RLI_STR_MENU_106, 0);
-  i106->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i106->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m10->add_item(static_cast<RLIMenuItem*>(i106));
+  MenuItemList* i106 = new MenuItemList(StrId::MENU_106, 0);
+  i106->addVariant(StrId::ARRAY_OFFON_OFF);
+  i106->addVariant(StrId::ARRAY_OFFON_ON);
+  m10->add_item(static_cast<MenuItem*>(i106));
 
-  RLIMenuItemInt* i107 = new RLIMenuItemInt(RLI_STR_MENU_107, 25, 100, 80);
-  m10->add_item(static_cast<RLIMenuItem*>(i107));
+  MenuItemInt* i107 = new MenuItemInt(StrId::MENU_107, 25, 100, 80);
+  m10->add_item(static_cast<MenuItem*>(i107));
 
 
   // --------------------------
-  RLIMenuItemMenu* m11 = new RLIMenuItemMenu(RLI_STR_MENU_11, m1);
+  MenuItemMenu* m11 = new MenuItemMenu(StrId::MENU_11, m1);
   m1->add_item(m11);
 
-  RLIMenuItemFloat* i110 = new RLIMenuItemFloat(RLI_STR_MENU_110, -5.f, 5.f, -4.4f);
-  m11->add_item(static_cast<RLIMenuItem*>(i110));
+  MenuItemReal* i110 = new MenuItemReal(StrId::MENU_110, -5.0, 5.0, -4.4);
+  m11->add_item(static_cast<MenuItem*>(i110));
 
-  RLIMenuItemInt* i111 = new RLIMenuItemInt(RLI_STR_MENU_111, 1, 255, 170);
-  m11->add_item(static_cast<RLIMenuItem*>(i111));
+  MenuItemInt* i111 = new MenuItemInt(StrId::MENU_111, 1, 255, 170);
+  m11->add_item(static_cast<MenuItem*>(i111));
 
-  RLIMenuItemInt* i112 = new RLIMenuItemInt(RLI_STR_MENU_112, -2048, 2048, 0);
-  m11->add_item(static_cast<RLIMenuItem*>(i112));
+  MenuItemInt* i112 = new MenuItemInt(StrId::MENU_112, -2048, 2048, 0);
+  m11->add_item(static_cast<MenuItem*>(i112));
   connect(i112, SIGNAL(valueChanged(int)), this, SIGNAL(analogZeroChanged(int)), Qt::QueuedConnection);
   analogZeroItem = i112;
 
-  RLIMenuItemInt* i113 = new RLIMenuItemInt(RLI_STR_MENU_113, 1, 255, 25);
-  m11->add_item(static_cast<RLIMenuItem*>(i113));
+  MenuItemInt* i113 = new MenuItemInt(StrId::MENU_113, 1, 255, 25);
+  m11->add_item(static_cast<MenuItem*>(i113));
 
-  RLIMenuItemInt* i114 = new RLIMenuItemInt(RLI_STR_MENU_114, 0, 255, 18);
-  m11->add_item(static_cast<RLIMenuItem*>(i114));
+  MenuItemInt* i114 = new MenuItemInt(StrId::MENU_114, 0, 255, 18);
+  m11->add_item(static_cast<MenuItem*>(i114));
 
-  RLIMenuItemInt* i115 = new RLIMenuItemInt(RLI_STR_MENU_115, 0, 255, 16);
-  m11->add_item(static_cast<RLIMenuItem*>(i115));
+  MenuItemInt* i115 = new MenuItemInt(StrId::MENU_115, 0, 255, 16);
+  m11->add_item(static_cast<MenuItem*>(i115));
 
-  RLIMenuItemInt* i116 = new RLIMenuItemInt(RLI_STR_MENU_116, 0, 4096, 100);
-  m11->add_item(static_cast<RLIMenuItem*>(i116));
+  MenuItemInt* i116 = new MenuItemInt(StrId::MENU_116, 0, 4096, 100);
+  m11->add_item(static_cast<MenuItem*>(i116));
 
-  RLIMenuItemInt* i117 = new RLIMenuItemInt(RLI_STR_MENU_117, 0, 255, 30);
-  m11->add_item(static_cast<RLIMenuItem*>(i117));
+  MenuItemInt* i117 = new MenuItemInt(StrId::MENU_117, 0, 255, 30);
+  m11->add_item(static_cast<MenuItem*>(i117));
 
-  RLIMenuItemInt* i118 = new RLIMenuItemInt(RLI_STR_MENU_118, -20, 20, -2);
-  m11->add_item(static_cast<RLIMenuItem*>(i118));
+  MenuItemInt* i118 = new MenuItemInt(StrId::MENU_118, -20, 20, -2);
+  m11->add_item(static_cast<MenuItem*>(i118));
 
-  RLIMenuItemInt* i119 = new RLIMenuItemInt(RLI_STR_MENU_119, -20, 20, -2);
-  m11->add_item(static_cast<RLIMenuItem*>(i119));
+  MenuItemInt* i119 = new MenuItemInt(StrId::MENU_119, -20, 20, -2);
+  m11->add_item(static_cast<MenuItem*>(i119));
 
-  RLIMenuItemInt* i1110 = new RLIMenuItemInt(RLI_STR_MENU_11A, -20, 20, 0);
-  m11->add_item(static_cast<RLIMenuItem*>(i1110));
+  MenuItemInt* i1110 = new MenuItemInt(StrId::MENU_11A, -20, 20, 0);
+  m11->add_item(static_cast<MenuItem*>(i1110));
 
   // --------------------------
-  RLIMenuItemMenu* m12 = new RLIMenuItemMenu(RLI_STR_MENU_12, m1);
+  MenuItemMenu* m12 = new MenuItemMenu(StrId::MENU_12, m1);
   m1->add_item(m12);
 
-  RLIMenuItemList* i120 = new RLIMenuItemList(RLI_STR_MENU_120, 0);
-  i120->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i120->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m12->add_item(static_cast<RLIMenuItem*>(i120));
+  MenuItemList* i120 = new MenuItemList(StrId::MENU_120, 0);
+  i120->addVariant(StrId::ARRAY_OFFON_OFF);
+  i120->addVariant(StrId::ARRAY_OFFON_ON);
+  m12->add_item(static_cast<MenuItem*>(i120));
 
-  RLIMenuItemList* i121 = new RLIMenuItemList(RLI_STR_MENU_121, 0);
-  i121->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i121->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m12->add_item(static_cast<RLIMenuItem*>(i121));
+  MenuItemList* i121 = new MenuItemList(StrId::MENU_121, 0);
+  i121->addVariant(StrId::ARRAY_OFFON_OFF);
+  i121->addVariant(StrId::ARRAY_OFFON_ON);
+  m12->add_item(static_cast<MenuItem*>(i121));
 
-  RLIMenuItemList* i122 = new RLIMenuItemList(RLI_STR_MENU_122, 0);
-  i122->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i122->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m12->add_item(static_cast<RLIMenuItem*>(i122));
+  MenuItemList* i122 = new MenuItemList(StrId::MENU_122, 0);
+  i122->addVariant(StrId::ARRAY_OFFON_OFF);
+  i122->addVariant(StrId::ARRAY_OFFON_ON);
+  m12->add_item(static_cast<MenuItem*>(i122));
 
-  RLIMenuItemList* i123 = new RLIMenuItemList(RLI_STR_MENU_123, 0);
-  i123->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i123->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m12->add_item(static_cast<RLIMenuItem*>(i123));
+  MenuItemList* i123 = new MenuItemList(StrId::MENU_123, 0);
+  i123->addVariant(StrId::ARRAY_OFFON_OFF);
+  i123->addVariant(StrId::ARRAY_OFFON_ON);
+  m12->add_item(static_cast<MenuItem*>(i123));
 
-  RLIMenuItemList* i124 = new RLIMenuItemList(RLI_STR_MENU_124, 0);
-  i124->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i124->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m12->add_item(static_cast<RLIMenuItem*>(i124));
+  MenuItemList* i124 = new MenuItemList(StrId::MENU_124, 0);
+  i124->addVariant(StrId::ARRAY_OFFON_OFF);
+  i124->addVariant(StrId::ARRAY_OFFON_ON);
+  m12->add_item(static_cast<MenuItem*>(i124));
 
-  RLIMenuItemList* i125 = new RLIMenuItemList(RLI_STR_MENU_125, 0);
-  i125->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i125->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m12->add_item(static_cast<RLIMenuItem*>(i125));
+  MenuItemList* i125 = new MenuItemList(StrId::MENU_125, 0);
+  i125->addVariant(StrId::ARRAY_OFFON_OFF);
+  i125->addVariant(StrId::ARRAY_OFFON_ON);
+  m12->add_item(static_cast<MenuItem*>(i125));
 
-  RLIMenuItemList* i126 = new RLIMenuItemList(RLI_STR_MENU_126, 0);
-  i126->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i126->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m12->add_item(static_cast<RLIMenuItem*>(i126));
+  MenuItemList* i126 = new MenuItemList(StrId::MENU_126, 0);
+  i126->addVariant(StrId::ARRAY_OFFON_OFF);
+  i126->addVariant(StrId::ARRAY_OFFON_ON);
+  m12->add_item(static_cast<MenuItem*>(i126));
 
-  RLIMenuItemList* i127 = new RLIMenuItemList(RLI_STR_MENU_127, 0);
-  i127->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i127->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m12->add_item(static_cast<RLIMenuItem*>(i127));
+  MenuItemList* i127 = new MenuItemList(StrId::MENU_127, 0);
+  i127->addVariant(StrId::ARRAY_OFFON_OFF);
+  i127->addVariant(StrId::ARRAY_OFFON_ON);
+  m12->add_item(static_cast<MenuItem*>(i127));
 
   // --------------------------
-  RLIMenuItemMenu* m13 = new RLIMenuItemMenu(RLI_STR_MENU_13, m1);
+  MenuItemMenu* m13 = new MenuItemMenu(StrId::MENU_13, m1);
   m1->add_item(m13);
 
-  RLIMenuItemList* i130 = new RLIMenuItemList(RLI_STR_MENU_130, 1);
-  i130->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i130->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m13->add_item(static_cast<RLIMenuItem*>(i130));
+  MenuItemList* i130 = new MenuItemList(StrId::MENU_130, 1);
+  i130->addVariant(StrId::ARRAY_OFFON_OFF);
+  i130->addVariant(StrId::ARRAY_OFFON_ON);
+  m13->add_item(static_cast<MenuItem*>(i130));
 
-  RLIMenuItemList* i131 = new RLIMenuItemList(RLI_STR_MENU_131, 1);
-  i131->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i131->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m13->add_item(static_cast<RLIMenuItem*>(i131));
+  MenuItemList* i131 = new MenuItemList(StrId::MENU_131, 1);
+  i131->addVariant(StrId::ARRAY_OFFON_OFF);
+  i131->addVariant(StrId::ARRAY_OFFON_ON);
+  m13->add_item(static_cast<MenuItem*>(i131));
 
-  RLIMenuItemList* i132 = new RLIMenuItemList(RLI_STR_MENU_132, 1);
-  i132->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i132->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m13->add_item(static_cast<RLIMenuItem*>(i132));
+  MenuItemList* i132 = new MenuItemList(StrId::MENU_132, 1);
+  i132->addVariant(StrId::ARRAY_OFFON_OFF);
+  i132->addVariant(StrId::ARRAY_OFFON_ON);
+  m13->add_item(static_cast<MenuItem*>(i132));
 
-  RLIMenuItemInt* i133 = new RLIMenuItemInt(RLI_STR_MENU_133, 4800, 38400, 4800);
-  m11->add_item(static_cast<RLIMenuItem*>(i133));
+  MenuItemInt* i133 = new MenuItemInt(StrId::MENU_133, 4800, 38400, 4800);
+  m11->add_item(static_cast<MenuItem*>(i133));
 
 
   // --------------------------
@@ -197,271 +204,270 @@ void MenuEngine::initCnfgMenuTree() {
 
 
 void MenuEngine::initMainMenuTree() {
-  RLIMenuItemMenu* m0 = new RLIMenuItemMenu(RLI_STR_MENU_0, nullptr);
+  MenuItemMenu* m0 = new MenuItemMenu(StrId::MENU_0, nullptr);
 
   // --------------------------
-  RLIMenuItemMenu* m00 = new RLIMenuItemMenu(RLI_STR_MENU_00, m0);
+  MenuItemMenu* m00 = new MenuItemMenu(StrId::MENU_00, m0);
   m0->add_item(m00);
 
-  RLIMenuItemInt* i000 = new RLIMenuItemInt(RLI_STR_MENU_000, 0, 255, 255);
+  MenuItemInt* i000 = new MenuItemInt(StrId::MENU_000, 0, 255, 255);
   connect(i000, SIGNAL(valueChanged(int)), this, SIGNAL(radarBrightnessChanged(int)));
-  m00->add_item(static_cast<RLIMenuItem*>(i000));
+  m00->add_item(static_cast<MenuItem*>(i000));
 
-  RLIMenuItemInt* i001 = new RLIMenuItemInt(RLI_STR_MENU_001, 0, 255, 255);
-  m00->add_item(static_cast<RLIMenuItem*>(i001));
+  MenuItemInt* i001 = new MenuItemInt(StrId::MENU_001, 0, 255, 255);
+  m00->add_item(static_cast<MenuItem*>(i001));
 
-  RLIMenuItemInt* i002 = new RLIMenuItemInt(RLI_STR_MENU_002, 0, 255, 255);
-  m00->add_item(static_cast<RLIMenuItem*>(i002));
+  MenuItemInt* i002 = new MenuItemInt(StrId::MENU_002, 0, 255, 255);
+  m00->add_item(static_cast<MenuItem*>(i002));
 
-  RLIMenuItemInt* i003 = new RLIMenuItemInt(RLI_STR_MENU_003, 0, 255, 255);
-  m00->add_item(static_cast<RLIMenuItem*>(i003));
+  MenuItemInt* i003 = new MenuItemInt(StrId::MENU_003, 0, 255, 255);
+  m00->add_item(static_cast<MenuItem*>(i003));
 
-  RLIMenuItemInt* i004 = new RLIMenuItemInt(RLI_STR_MENU_004, 0, 255, 255);
-  m00->add_item(static_cast<RLIMenuItem*>(i004));
+  MenuItemInt* i004 = new MenuItemInt(StrId::MENU_004, 0, 255, 255);
+  m00->add_item(static_cast<MenuItem*>(i004));
 
-  RLIMenuItemInt* i005 = new RLIMenuItemInt(RLI_STR_MENU_005, 0, 255, 255);
-  m00->add_item(static_cast<RLIMenuItem*>(i005));
+  MenuItemInt* i005 = new MenuItemInt(StrId::MENU_005, 0, 255, 255);
+  m00->add_item(static_cast<MenuItem*>(i005));
 
-  RLIMenuItemInt* i006 = new RLIMenuItemInt(RLI_STR_MENU_006, 0, 255, 255);
-  m00->add_item(static_cast<RLIMenuItem*>(i006));
+  MenuItemInt* i006 = new MenuItemInt(StrId::MENU_006, 0, 255, 255);
+  m00->add_item(static_cast<MenuItem*>(i006));
 
-  RLIMenuItemInt* i007 = new RLIMenuItemInt(RLI_STR_MENU_007, 0, 255, 255);
-  m00->add_item(static_cast<RLIMenuItem*>(i007));
+  MenuItemInt* i007 = new MenuItemInt(StrId::MENU_007, 0, 255, 255);
+  m00->add_item(static_cast<MenuItem*>(i007));
 
-  RLIMenuItemList* i008 = new RLIMenuItemList(RLI_STR_MENU_008, 0);
-  i008->addVariant(RLI_STR_ARRAY_DAY_DAY);
-  i008->addVariant(RLI_STR_ARRAY_DAY_NIGHT);
-  m00->add_item(static_cast<RLIMenuItem*>(i008));
+  MenuItemList* i008 = new MenuItemList(StrId::MENU_008, 0);
+  i008->addVariant(StrId::ARRAY_DAY_DAY);
+  i008->addVariant(StrId::ARRAY_DAY_NIGHT);
+  m00->add_item(static_cast<MenuItem*>(i008));
 
 
   // --------------------------
-  RLIMenuItemMenu* m01 = new RLIMenuItemMenu(RLI_STR_MENU_01, m0);
+  MenuItemMenu* m01 = new MenuItemMenu(StrId::MENU_01, m0);
   m0->add_item(m01);
 
-  RLIMenuItemFloat* i010 = new RLIMenuItemFloat(RLI_STR_MENU_010, 0.01f, 8.f, 2.f);
-  m01->add_item(static_cast<RLIMenuItem*>(i010));
+  MenuItemReal* i010 = new MenuItemReal(StrId::MENU_010, 0.01, 8.0, 2.0);
+  m01->add_item(static_cast<MenuItem*>(i010));
 
-  RLIMenuItemInt* i011 = new RLIMenuItemInt(RLI_STR_MENU_011, 5, 60, 30);
-  m01->add_item(static_cast<RLIMenuItem*>(i011));
+  MenuItemInt* i011 = new MenuItemInt(StrId::MENU_011, 5, 60, 30);
+  m01->add_item(static_cast<MenuItem*>(i011));
 
-  RLIMenuItemInt* i012 = new RLIMenuItemInt(RLI_STR_MENU_012, 5, 60, 30);
-  m01->add_item(static_cast<RLIMenuItem*>(i012));
+  MenuItemInt* i012 = new MenuItemInt(StrId::MENU_012, 5, 60, 30);
+  m01->add_item(static_cast<MenuItem*>(i012));
 
-  RLIMenuItemList* i013 = new RLIMenuItemList(RLI_STR_MENU_013, 0);
-  i013->addVariant(RLI_STR_ARRAY_TRACK_1);
-  i013->addVariant(RLI_STR_ARRAY_TRACK_2);
-  i013->addVariant(RLI_STR_ARRAY_TRACK_3);
-  i013->addVariant(RLI_STR_ARRAY_TRACK_6);
-  i013->addVariant(RLI_STR_ARRAY_TRACK_12);
-  m01->add_item(static_cast<RLIMenuItem*>(i013));
+  MenuItemList* i013 = new MenuItemList(StrId::MENU_013, 0);
+  i013->addVariant(StrId::ARRAY_TRACK_1);
+  i013->addVariant(StrId::ARRAY_TRACK_2);
+  i013->addVariant(StrId::ARRAY_TRACK_3);
+  i013->addVariant(StrId::ARRAY_TRACK_6);
+  i013->addVariant(StrId::ARRAY_TRACK_12);
+  m01->add_item(static_cast<MenuItem*>(i013));
   connect(i013, SIGNAL(valueChanged(RLIString)), this, SIGNAL(tailsModeChanged(RLIString)), Qt::QueuedConnection);
 
-  RLIMenuItemList* i014 = new RLIMenuItemList(RLI_STR_MENU_014, 1);
-  i014->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i014->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m01->add_item(static_cast<RLIMenuItem*>(i014));
+  MenuItemList* i014 = new MenuItemList(StrId::MENU_014, 1);
+  i014->addVariant(StrId::ARRAY_OFFON_OFF);
+  i014->addVariant(StrId::ARRAY_OFFON_ON);
+  m01->add_item(static_cast<MenuItem*>(i014));
 
-  RLIMenuItemAction* i015 = new RLIMenuItemAction(RLI_STR_MENU_015);
+  MenuItemAction* i015 = new MenuItemAction(StrId::MENU_015);
   i015->setLocked(true);
-  m01->add_item(static_cast<RLIMenuItem*>(i015));
+  m01->add_item(static_cast<MenuItem*>(i015));
 
-  RLIMenuItemAction* i016 = new RLIMenuItemAction(RLI_STR_MENU_016);
+  MenuItemAction* i016 = new MenuItemAction(StrId::MENU_016);
   i016->setLocked(true);
-  m01->add_item(static_cast<RLIMenuItem*>(i016));
+  m01->add_item(static_cast<MenuItem*>(i016));
 
-  RLIMenuItemList* i017 = new RLIMenuItemList(RLI_STR_MENU_017, 0);
-  i017->addVariant(RLI_STR_ARRAY_TVEC_AP_WATER);
-  i017->addVariant(RLI_STR_ARRAY_TVEC_AP_GRND);
+  MenuItemList* i017 = new MenuItemList(StrId::MENU_017, 0);
+  i017->addVariant(StrId::ARRAY_TVEC_AP_WATER);
+  i017->addVariant(StrId::ARRAY_TVEC_AP_GRND);
   i017->setLocked(true);
-  m01->add_item(static_cast<RLIMenuItem*>(i017));
+  m01->add_item(static_cast<MenuItem*>(i017));
 
 
   // --------------------------
-  RLIMenuItemMenu* m02 = new RLIMenuItemMenu(RLI_STR_MENU_02, m0);
+  MenuItemMenu* m02 = new MenuItemMenu(StrId::MENU_02, m0);
   m0->add_item(m02);
 
-  RLIMenuItemInt* i020 = new RLIMenuItemInt(RLI_STR_MENU_020, 0, 255, 5);
-  m02->add_item(static_cast<RLIMenuItem*>(i020));
+  MenuItemInt* i020 = new MenuItemInt(StrId::MENU_020, 0, 255, 5);
+  m02->add_item(static_cast<MenuItem*>(i020));
 
-  RLIMenuItemList* i021 = new RLIMenuItemList(RLI_STR_MENU_021, 0);
-  i021->addVariant(RLI_STR_ARRAY_VD_KM);
-  i021->addVariant(RLI_STR_ARRAY_VD_NM);
-  m02->add_item(static_cast<RLIMenuItem*>(i021));
+  MenuItemList* i021 = new MenuItemList(StrId::MENU_021, 0);
+  i021->addVariant(StrId::ARRAY_VD_KM);
+  i021->addVariant(StrId::ARRAY_VD_NM);
+  m02->add_item(static_cast<MenuItem*>(i021));
 
-  RLIMenuItemList* i022 = new RLIMenuItemList(RLI_STR_MENU_022, 0);
-  i022->addVariant(RLI_STR_ARRAY_SPEED_MAN);
-  i022->addVariant(RLI_STR_ARRAY_SPEED_LOG);
-  m02->add_item(static_cast<RLIMenuItem*>(i022));
+  MenuItemList* i022 = new MenuItemList(StrId::MENU_022, 0);
+  i022->addVariant(StrId::ARRAY_SPEED_MAN);
+  i022->addVariant(StrId::ARRAY_SPEED_LOG);
+  m02->add_item(static_cast<MenuItem*>(i022));
 
-  RLIMenuItemFloat* i023 = new RLIMenuItemFloat(RLI_STR_MENU_023, 0.f, 90.f, 5.f);
+  MenuItemReal* i023 = new MenuItemReal(StrId::MENU_023, 0.0, 90.0, 5.0);
   m02->add_item(i023);
 
-  RLIMenuItemList* i024 = new RLIMenuItemList(RLI_STR_MENU_024, 2);
-  i024->addVariant(RLI_STR_ARRAY_DEV_STAB_ATER);
-  i024->addVariant(RLI_STR_ARRAY_DEV_STAB_GPS);
-  i024->addVariant(RLI_STR_ARRAY_DEV_STAB_DLG);
-  i024->addVariant(RLI_STR_ARRAY_DEV_STAB_L_G_W);
+  MenuItemList* i024 = new MenuItemList(StrId::MENU_024, 2);
+  i024->addVariant(StrId::ARRAY_DEV_STAB_ATER);
+  i024->addVariant(StrId::ARRAY_DEV_STAB_GPS);
+  i024->addVariant(StrId::ARRAY_DEV_STAB_DLG);
+  i024->addVariant(StrId::ARRAY_DEV_STAB_L_G_W);
   m02->add_item(i024);
 
-  RLIMenuItemInt* i025 = new RLIMenuItemInt(RLI_STR_MENU_025, 0, 90, 0);
+  MenuItemInt* i025 = new MenuItemInt(StrId::MENU_025, 0, 90, 0);
   m02->add_item(i025);
 
-  RLIMenuItemList* i026 = new RLIMenuItemList(RLI_STR_MENU_026, 1);
-  i026->addVariant(RLI_STR_ARRAY_LANG_ENGL);
-  i026->addVariant(RLI_STR_ARRAY_LANG_RUS);
+  MenuItemList* i026 = new MenuItemList(StrId::MENU_026, 1);
+  i026->addVariant(StrId::ARRAY_LANG_ENGL);
+  i026->addVariant(StrId::ARRAY_LANG_RUS);
   connect(i026, SIGNAL(valueChanged(RLIString)), this, SIGNAL(languageChanged(RLIString)), Qt::QueuedConnection);
   m02->add_item(i026);
 
-  RLIMenuItemFloat* i027 = new RLIMenuItemFloat(RLI_STR_MENU_027, 0.f, 359.9f, 0.f);
+  MenuItemReal* i027 = new MenuItemReal(StrId::MENU_027, 0.0, 359.9, 0.0);
   m02->add_item(i027);
 
-  RLIMenuItemInt* i028 = new RLIMenuItemInt(RLI_STR_MENU_028, 1, 100, 1);
+  MenuItemInt* i028 = new MenuItemInt(StrId::MENU_028, 1, 100, 1);
   m02->add_item(i028);
 
-  RLIMenuItemInt* i029 = new RLIMenuItemInt(RLI_STR_MENU_029, 1, 100, 1);
+  MenuItemInt* i029 = new MenuItemInt(StrId::MENU_029, 1, 100, 1);
   i029->setLocked(true);
   m02->add_item(i029);
 
-  RLIMenuItemList* i02A = new RLIMenuItemList(RLI_STR_MENU_02A, 0);
-  i02A->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i02A->addVariant(RLI_STR_ARRAY_OFFON_ON);
+  MenuItemList* i02A = new MenuItemList(StrId::MENU_02A, 0);
+  i02A->addVariant(StrId::ARRAY_OFFON_OFF);
+  i02A->addVariant(StrId::ARRAY_OFFON_ON);
   m02->add_item(i02A);
 
 
   // --------------------------
-  RLIMenuItemMenu* m03 = new RLIMenuItemMenu(RLI_STR_MENU_03, m0);
+  MenuItemMenu* m03 = new MenuItemMenu(StrId::MENU_03, m0);
   m0->add_item(m03);
 
-  RLIMenuItemInt* i030 = new RLIMenuItemInt(RLI_STR_MENU_030, 1, 2, 1);
-  m03->add_item(static_cast<RLIMenuItem*>(i030));
+  MenuItemInt* i030 = new MenuItemInt(StrId::MENU_030, 1, 2, 1);
+  m03->add_item(static_cast<MenuItem*>(i030));
 
-  RLIMenuItemList* i031 = new RLIMenuItemList(RLI_STR_MENU_031, 0);
-  i031->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i031->addVariant(RLI_STR_ARRAY_OFFON_ON);
+  MenuItemList* i031 = new MenuItemList(StrId::MENU_031, 0);
+  i031->addVariant(StrId::ARRAY_OFFON_OFF);
+  i031->addVariant(StrId::ARRAY_OFFON_ON);
   connect(i031, SIGNAL(valueChanged(RLIString)), this, SIGNAL(simulationChanged(RLIString)), Qt::QueuedConnection);
-  m03->add_item(static_cast<RLIMenuItem*>(i031));
+  m03->add_item(static_cast<MenuItem*>(i031));
 
-  RLIMenuItemList* i032 = new RLIMenuItemList(RLI_STR_MENU_032, 1);
-  i032->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i032->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m03->add_item(static_cast<RLIMenuItem*>(i032));
+  MenuItemList* i032 = new MenuItemList(StrId::MENU_032, 1);
+  i032->addVariant(StrId::ARRAY_OFFON_OFF);
+  i032->addVariant(StrId::ARRAY_OFFON_ON);
+  m03->add_item(static_cast<MenuItem*>(i032));
 
-  RLIMenuItemList* i033 = new RLIMenuItemList(RLI_STR_MENU_033, 1);
-  i033->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i033->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m03->add_item(static_cast<RLIMenuItem*>(i033));
+  MenuItemList* i033 = new MenuItemList(StrId::MENU_033, 1);
+  i033->addVariant(StrId::ARRAY_OFFON_OFF);
+  i033->addVariant(StrId::ARRAY_OFFON_ON);
+  m03->add_item(static_cast<MenuItem*>(i033));
 
-  RLIMenuItemFloat* i034 = new RLIMenuItemFloat(RLI_STR_MENU_034, 0.f, 3.f, 0.f);
-  m03->add_item(static_cast<RLIMenuItem*>(i034));
+  MenuItemReal* i034 = new MenuItemReal(StrId::MENU_034, 0.0, 3.0, 0.0);
+  m03->add_item(static_cast<MenuItem*>(i034));
 
-  RLIMenuItemList* i035 = new RLIMenuItemList(RLI_STR_MENU_035, 0);
-  i035->addVariant(RLI_STR_ARRAY_YESNO_YES);
-  i035->addVariant(RLI_STR_ARRAY_YESNO_NO);
-  m03->add_item(static_cast<RLIMenuItem*>(i035));
+  MenuItemList* i035 = new MenuItemList(StrId::MENU_035, 0);
+  i035->addVariant(StrId::ARRAY_YESNO_YES);
+  i035->addVariant(StrId::ARRAY_YESNO_NO);
+  m03->add_item(static_cast<MenuItem*>(i035));
 
-  RLIMenuItemList* i036 = new RLIMenuItemList(RLI_STR_MENU_036, 1);
-  i036->addVariant(RLI_STR_ARRAY_YESNO_YES);
-  i036->addVariant(RLI_STR_ARRAY_YESNO_NO);
+  MenuItemList* i036 = new MenuItemList(StrId::MENU_036, 1);
+  i036->addVariant(StrId::ARRAY_YESNO_YES);
+  i036->addVariant(StrId::ARRAY_YESNO_NO);
   i036->setEnabled(false);
-  m03->add_item(static_cast<RLIMenuItem*>(i036));
+  m03->add_item(static_cast<MenuItem*>(i036));
 
-  RLIMenuItemList* i037 = new RLIMenuItemList(RLI_STR_MENU_037, 1);
-  i037->addVariant(RLI_STR_ARRAY_YESNO_YES);
-  i037->addVariant(RLI_STR_ARRAY_YESNO_NO);
+  MenuItemList* i037 = new MenuItemList(StrId::MENU_037, 1);
+  i037->addVariant(StrId::ARRAY_YESNO_YES);
+  i037->addVariant(StrId::ARRAY_YESNO_NO);
   i037->setEnabled(false);
-  m03->add_item(static_cast<RLIMenuItem*>(i037));
+  m03->add_item(static_cast<MenuItem*>(i037));
 
-  RLIMenuItemList* i038 = new RLIMenuItemList(RLI_STR_MENU_038, 1);
-  i038->addVariant(RLI_STR_ARRAY_YESNO_YES);
-  i038->addVariant(RLI_STR_ARRAY_YESNO_NO);
+  MenuItemList* i038 = new MenuItemList(StrId::MENU_038, 1);
+  i038->addVariant(StrId::ARRAY_YESNO_YES);
+  i038->addVariant(StrId::ARRAY_YESNO_NO);
   i038->setEnabled(false);
-  m03->add_item(static_cast<RLIMenuItem*>(i038));
+  m03->add_item(static_cast<MenuItem*>(i038));
 
 
   // --------------------------
-  RLIMenuItemMenu* m04 = new RLIMenuItemMenu(RLI_STR_MENU_04, m0);
+  MenuItemMenu* m04 = new MenuItemMenu(StrId::MENU_04, m0);
   m0->add_item(m04);
 
-  RLIMenuItemInt* i040 = new RLIMenuItemInt(RLI_STR_MENU_040, 1, 4, 1);
-  m04->add_item(static_cast<RLIMenuItem*>(i040));
+  MenuItemInt* i040 = new MenuItemInt(StrId::MENU_040, 1, 4, 1);
+  m04->add_item(static_cast<MenuItem*>(i040));
   routeLoaderItem = i040;
 
-  RLIMenuItemInt* i041 = new RLIMenuItemInt(RLI_STR_MENU_041, 0, 10, 1);
-  m04->add_item(static_cast<RLIMenuItem*>(i041));
+  MenuItemInt* i041 = new MenuItemInt(StrId::MENU_041, 0, 10, 1);
+  m04->add_item(static_cast<MenuItem*>(i041));
 
-  RLIMenuItemAction* i042 = new RLIMenuItemAction(RLI_STR_MENU_042);
+  MenuItemAction* i042 = new MenuItemAction(StrId::MENU_042);
   i042->setLocked(true);
-  m04->add_item(static_cast<RLIMenuItem*>(i042));
+  m04->add_item(static_cast<MenuItem*>(i042));
 
-  RLIMenuItemInt* i043 = new RLIMenuItemInt(RLI_STR_MENU_043, 40, 1000, 200);
-  m04->add_item(static_cast<RLIMenuItem*>(i043));
+  MenuItemInt* i043 = new MenuItemInt(StrId::MENU_043, 40, 1000, 200);
+  m04->add_item(static_cast<MenuItem*>(i043));
 
-  RLIMenuItemAction* i044 = new RLIMenuItemAction(RLI_STR_MENU_044);
-  m04->add_item(static_cast<RLIMenuItem*>(i044));
+  MenuItemAction* i044 = new MenuItemAction(StrId::MENU_044);
+  m04->add_item(static_cast<MenuItem*>(i044));
   routeEditItem = i044;
 
-  RLIMenuItemInt* i045 = new RLIMenuItemInt(RLI_STR_MENU_045, 0, 10, 1);
-  m04->add_item(static_cast<RLIMenuItem*>(i045));
+  MenuItemInt* i045 = new MenuItemInt(StrId::MENU_045, 0, 10, 1);
+  m04->add_item(static_cast<MenuItem*>(i045));
 
-  RLIMenuItemList* i046 = new RLIMenuItemList(RLI_STR_MENU_046, 0);
-  i046->addVariant(RLI_STR_ARRAY_NAME_SYMB_BUOY);
-  i046->addVariant(RLI_STR_ARRAY_NAME_SYMB_MILESTONE);
-  i046->addVariant(RLI_STR_ARRAY_NAME_SYMB_UNDERWATER_DAMAGE);
-  i046->addVariant(RLI_STR_ARRAY_NAME_SYMB_ANCHORAGE);
-  i046->addVariant(RLI_STR_ARRAY_NAME_SYMB_COASTAL_LANDMARK);
-  m04->add_item(static_cast<RLIMenuItem*>(i046));
+  MenuItemList* i046 = new MenuItemList(StrId::MENU_046, 0);
+  i046->addVariant(StrId::ARRAY_NAME_SYMB_BUOY);
+  i046->addVariant(StrId::ARRAY_NAME_SYMB_MILESTONE);
+  i046->addVariant(StrId::ARRAY_NAME_SYMB_UNDERWATER_DAMAGE);
+  i046->addVariant(StrId::ARRAY_NAME_SYMB_ANCHORAGE);
+  i046->addVariant(StrId::ARRAY_NAME_SYMB_COASTAL_LANDMARK);
+  m04->add_item(static_cast<MenuItem*>(i046));
 
-  RLIMenuItemInt* i047 = new RLIMenuItemInt(RLI_STR_MENU_047, 1, 4, 1);
-  m04->add_item(static_cast<RLIMenuItem*>(i047));
+  MenuItemInt* i047 = new MenuItemInt(StrId::MENU_047, 1, 4, 1);
+  m04->add_item(static_cast<MenuItem*>(i047));
   routeSaverItem = i047;
 
 
   // --------------------------
-  RLIMenuItemMenu* m05 = new RLIMenuItemMenu(RLI_STR_MENU_05, m0);
+  MenuItemMenu* m05 = new MenuItemMenu(StrId::MENU_05, m0);
   m0->add_item(m05);
 
-  RLIMenuItemList* i050 = new RLIMenuItemList(RLI_STR_MENU_050, 0);
-  i050->addVariant(RLI_STR_ARRAY_NAME_SIGN_UNINDENT);
-  i050->addVariant(RLI_STR_ARRAY_NAME_SIGN_FRIENDLY);
-  i050->addVariant(RLI_STR_ARRAY_NAME_SIGN_ENEMY);
-  m05->add_item(static_cast<RLIMenuItem*>(i050));
+  MenuItemList* i050 = new MenuItemList(StrId::MENU_050, 0);
+  i050->addVariant(StrId::ARRAY_NAME_SIGN_UNINDENT);
+  i050->addVariant(StrId::ARRAY_NAME_SIGN_FRIENDLY);
+  i050->addVariant(StrId::ARRAY_NAME_SIGN_ENEMY);
+  m05->add_item(static_cast<MenuItem*>(i050));
 
-  RLIMenuItemList* i051 = new RLIMenuItemList(RLI_STR_MENU_051, 0);
-  i051->addVariant(RLI_STR_ARRAY_NAME_RECOG_OFF);
-  i051->addVariant(RLI_STR_ARRAY_NAME_RECOG_ROUND);
-  i051->addVariant(RLI_STR_ARRAY_NAME_RECOG_SECT);
-  m05->add_item(static_cast<RLIMenuItem*>(i051));
+  MenuItemList* i051 = new MenuItemList(StrId::MENU_051, 0);
+  i051->addVariant(StrId::ARRAY_NAME_RECOG_OFF);
+  i051->addVariant(StrId::ARRAY_NAME_RECOG_ROUND);
+  i051->addVariant(StrId::ARRAY_NAME_RECOG_SECT);
+  m05->add_item(static_cast<MenuItem*>(i051));
 
-  RLIMenuItemList* i052 = new RLIMenuItemList(RLI_STR_MENU_052, 0);
-  i052->addVariant(RLI_STR_ARRAY_OFFON_OFF);
-  i052->addVariant(RLI_STR_ARRAY_OFFON_ON);
-  m05->add_item(static_cast<RLIMenuItem*>(i052));
+  MenuItemList* i052 = new MenuItemList(StrId::MENU_052, 0);
+  i052->addVariant(StrId::ARRAY_OFFON_OFF);
+  i052->addVariant(StrId::ARRAY_OFFON_ON);
+  m05->add_item(static_cast<MenuItem*>(i052));
 
   // --------------------------
   _main_menu = m0;
 }
 
 MenuEngine::~MenuEngine() {
-  delete _prog;
-  delete _fbo;
-  glDeleteBuffers(INFO_ATTR_COUNT, _vbo_ids);
+  glDeleteBuffers(ATTR_COUNT, _vbo_ids);
   delete _main_menu;
+  delete _cnfg_menu;
 }
 
-void MenuEngine::onStateChanged(RLIWidgetState state) {
+void MenuEngine::onStateChanged(WidgetState state) {
   switch (state) {
-  case RLIWidgetState::MAIN_MENU:
+  case WidgetState::MAIN_MENU:
       _menu = _main_menu;
       break;
-  case RLIWidgetState::CONFIG_MENU:
+  case WidgetState::CONFIG_MENU:
       _menu = _cnfg_menu;
       break;
-  case RLIWidgetState::DEFAULT:
-  case RLIWidgetState::MAGNIFIER:
+  case WidgetState::DEFAULT:
+  case WidgetState::MAGNIFIER:
       _selection_active = false;
       _menu = nullptr;
       break;
-  case RLIWidgetState::ROUTE_EDITION:
+  case WidgetState::ROUTE_EDITION:
   default:
       break;
   }
@@ -475,16 +481,6 @@ void MenuEngine::onAnalogZeroChanged(int val) {
   analogZeroItem->setValue(val);
 }
 
-
-void MenuEngine::onLanguageChanged(RLIString lang_str) {
-  if (lang_str == RLI_STR_ARRAY_LANG_ENGL)
-    _lang = RLI_LANG_ENGLISH;
-
-  if (lang_str == RLI_STR_ARRAY_LANG_RUS)
-    _lang = RLI_LANG_RUSSIAN;
-
-  _need_update = true;
-}
 
 void MenuEngine::onKeyPressed(QKeyEvent* event) {
   switch(event->key()) {
@@ -548,8 +544,8 @@ void MenuEngine::onEnter() {
        && !_selection_active)
     return;
 
-  if (_menu->item(_selected_line - 1)->type() == RLIMenuItem::MENU) {
-    _menu = dynamic_cast<RLIMenuItemMenu*>(_menu->item(_selected_line - 1));
+  if (_menu->item(_selected_line - 1)->type() == MenuItem::Type::MENU) {
+    _menu = dynamic_cast<MenuItemMenu*>(_menu->item(_selected_line - 1));
     _selected_line = 1;
   } else {
     _selection_active = !_selection_active;
@@ -591,61 +587,60 @@ void MenuEngine::onBack() {
 }
 
 
-void MenuEngine::resize(const RLIMenuLayout& layout) {
-  _geometry = layout.geometry;
-  _font_tag = layout.font;
+void MenuEngine::resizeTexture(const Layout& layout) {
+  TextureLayerBase::resize(layout.menu.geometry);
 
-  if (_fbo != nullptr)
-    delete _fbo;
+  _projection.setToIdentity();
+  _projection.ortho(0.f, width(), 0.f, height(), -1.f, 1.f);
 
-  _fbo = new QOpenGLFramebufferObject(_geometry.size());
-
+  _font_tag = layout.menu.font;
   _need_update = true;
 }
 
-void MenuEngine::update() {
+void MenuEngine::clearTexture() {
+  TextureLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
+}
+
+
+void MenuEngine::paint(const State& state, const Layout& layout) {
   if (!_need_update)
     return;
 
-  glViewport(0, 0, _geometry.width(), _geometry.height());
+  glViewport(0, 0, width(), height());
 
   glEnable(GL_BLEND);
 
-  _fbo->bind();
+  glBindFramebuffer(GL_FRAMEBUFFER, fboId());
 
-  glClearColor(MENU_BACKGRD_COLOR.redF(), MENU_BACKGRD_COLOR.greenF(), MENU_BACKGRD_COLOR.blueF(), 1.f);
+  glClearColor(MENU_BACKGRD_COLOR.redF(), MENU_BACKGRD_COLOR.greenF(), MENU_BACKGRD_COLOR.blueF(), 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
 
-  QMatrix4x4 projection;
-  projection.setToIdentity();
-  projection.ortho(0.f, _geometry.width(), 0.f, _geometry.height(), -1.f, 1.f);
+  glUseProgram(progId());
 
-  _prog->bind();
-
-  _prog->setUniformValue(_uniform_locs[INFO_UNIF_MVP], projection);
+  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, _projection.data());
 
   // Border
-  drawRect(QRect(QPoint(0, 0), QSize(_geometry.width(), 1)), MENU_BORDER_COLOR);
-  drawRect(QRect(QPoint(0, 0), QSize(1, _geometry.height())), MENU_BORDER_COLOR);
-  drawRect(QRect(QPoint(0, _geometry.height()-1), QSize(_geometry.width(), 1)), MENU_BORDER_COLOR);
-  drawRect(QRect(QPoint(_geometry.width()-1, 0), QSize(1, _geometry.height())), MENU_BORDER_COLOR);
+  drawRect(QRect(QPoint(0, 0), QSize(width(), 1)), MENU_BORDER_COLOR);
+  drawRect(QRect(QPoint(0, 0), QSize(1, height())), MENU_BORDER_COLOR);
+  drawRect(QRect(QPoint(0, height()-1), QSize(width(), 1)), MENU_BORDER_COLOR);
+  drawRect(QRect(QPoint(width()-1, 0), QSize(1, height())), MENU_BORDER_COLOR);
 
   if (_menu != nullptr) {
-    QSize font_size = _fonts->getFontSize(_font_tag);
+    QSize font_size = _fonts->fontSize(_font_tag);
 
     // Header separator
-    drawRect(QRect(QPoint(0, font_size.height() + 6), QSize(_geometry.width(), 1)), MENU_BORDER_COLOR);
+    drawRect(QRect(QPoint(0, font_size.height() + 6), QSize(width(), 1)), MENU_BORDER_COLOR);
     // Footer separator
-    drawRect(QRect(QPoint(0, _geometry.height() - font_size.height() - 6), QSize(_geometry.width(), 1)), MENU_BORDER_COLOR);
+    drawRect(QRect(QPoint(0, height() - font_size.height() - 6), QSize(width(), 1)), MENU_BORDER_COLOR);
 
     // Header
-    drawText(_menu->name(_lang), 0, ALIGN_CENTER, MENU_TEXT_STATIC_COLOR);
+    drawText(_menu->name(state.lang), 0, ALIGN_CENTER, MENU_TEXT_STATIC_COLOR);
 
     // Menu
     for (int i = 0; i < _menu->item_count(); i++) {
 //      if ((_menu->item(i) == routeLoaderItem || _menu->item(i) == routeSaverItem) && _routeEngine != nullptr) {
-//        if (_routeEngine->isIndexUsed(static_cast<RLIMenuItemInt*>(_menu->item(i))->intValue())) {
+//        if (_routeEngine->isIndexUsed(static_cast<MenuItemInt*>(_menu->item(i))->intValue())) {
 //          drawText(_menu->item(i)->name(_lang), i+1, ALIGN_LEFT, MENU_TEXT_STATIC_COLOR);
 //          drawText(_menu->item(i)->value(_lang), i+1, ALIGN_RIGHT, MENU_TEXT_DYNAMIC_COLOR);
 //        } else {
@@ -657,14 +652,14 @@ void MenuEngine::update() {
 //      }
 
       if (_menu->item(i)->locked()) {
-        drawText(_menu->item(i)->name(_lang), i+1, ALIGN_LEFT, MENU_LOCKED_ITEM_COLOR);
-        drawText(_menu->item(i)->value(_lang), i+1, ALIGN_RIGHT, MENU_LOCKED_ITEM_COLOR);
+        drawText(_menu->item(i)->name(state.lang), i+1, ALIGN_LEFT, MENU_LOCKED_ITEM_COLOR);
+        drawText(_menu->item(i)->value(state.lang), i+1, ALIGN_RIGHT, MENU_LOCKED_ITEM_COLOR);
       } else if (_menu->item(i)->enabled()) {
-        drawText(_menu->item(i)->name(_lang), i+1, ALIGN_LEFT, MENU_TEXT_STATIC_COLOR);
-        drawText(_menu->item(i)->value(_lang), i+1, ALIGN_RIGHT, MENU_TEXT_DYNAMIC_COLOR);
+        drawText(_menu->item(i)->name(state.lang), i+1, ALIGN_LEFT, MENU_TEXT_STATIC_COLOR);
+        drawText(_menu->item(i)->value(state.lang), i+1, ALIGN_RIGHT, MENU_TEXT_DYNAMIC_COLOR);
       } else {
-        drawText(_menu->item(i)->name(_lang), i+1, ALIGN_LEFT, MENU_LOCKED_ITEM_COLOR);
-        drawText(_menu->item(i)->value(_lang), i+1, ALIGN_RIGHT, MENU_DISABLED_ITEM_COLOR);
+        drawText(_menu->item(i)->name(state.lang), i+1, ALIGN_LEFT, MENU_LOCKED_ITEM_COLOR);
+        drawText(_menu->item(i)->value(state.lang), i+1, ALIGN_RIGHT, MENU_DISABLED_ITEM_COLOR);
       }
     }
 
@@ -672,14 +667,14 @@ void MenuEngine::update() {
     drawSelection();
   }
 
-  _prog->release();
-  _fbo->release();
+  glUseProgram(0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   _need_update = false;
 }
 
 void MenuEngine::drawSelection() {
-  QSize font_size = _fonts->getFontSize(_font_tag);
+  QSize font_size = _fonts->fontSize(_font_tag);
 
   QColor col;
   if (_selection_active)
@@ -688,7 +683,7 @@ void MenuEngine::drawSelection() {
     col = MENU_TEXT_STATIC_COLOR;
 
   QPoint anchor = QPoint(2, 2+_selected_line*(6+font_size.height()));
-  QSize  size = QSize(_geometry.width() - 4, font_size.height() + 4);
+  QSize  size = QSize(width() - 4, font_size.height() + 4);
 
   drawRect(QRect(anchor, QSize(size.width(), 1)), col);
   drawRect(QRect(anchor, QSize(1, size.height())), col);
@@ -700,28 +695,27 @@ void MenuEngine::drawBar() {
   if (_menu == nullptr)
     return;
 
-  QSize size = _fbo->size();
   int bar_width = 0;
 
-  RLIMenuItem* currItem = _menu->item(_selected_line - 1);
+  MenuItem* currItem = _menu->item(_selected_line - 1);
 
-  RLIMenuItemInt* intItem = dynamic_cast<RLIMenuItemInt*>(currItem);
+  MenuItemInt* intItem = dynamic_cast<MenuItemInt*>(currItem);
   if (intItem != nullptr) {
-    int val = intItem->intValue();
-    int min_val = intItem->minValue();
-    int max_val = intItem->maxValue();
-    bar_width = (size.width() - 2) * static_cast<float>(val - min_val) / (max_val - min_val);
+    double val = intItem->intValue();
+    double min_val = intItem->minValue();
+    double max_val = intItem->maxValue();
+    bar_width = static_cast<int>((width() - 2) * (val - min_val) / (max_val - min_val));
   }
 
-  RLIMenuItemFloat* fltItem = dynamic_cast<RLIMenuItemFloat*>(currItem);
+  MenuItemReal* fltItem = dynamic_cast<MenuItemReal*>(currItem);
   if (fltItem != nullptr) {
-    float val = fltItem->fltValue();
-    float min_val = fltItem->minValue();
-    float max_val = fltItem->maxValue();
-    bar_width = (size.width() - 2) * (val - min_val) / (max_val - min_val);
+    double val = fltItem->fltValue();
+    double min_val = fltItem->minValue();
+    double max_val = fltItem->maxValue();
+    bar_width = static_cast<int>((width() - 2) * (val - min_val) / (max_val - min_val));
   }
 
-  drawRect(QRect(QPoint(1, size.height()-17), QSize(bar_width, 14)), MENU_BORDER_COLOR);
+  drawRect(QRect(QPoint(1, height()-17), QSize(bar_width, 14)), MENU_BORDER_COLOR);
 }
 
 void MenuEngine::drawRect(const QRect& rect, const QColor& col) {
@@ -736,27 +730,27 @@ void MenuEngine::drawRect(const QRect& rect, const QColor& col) {
   pos.push_back(rect.x() + rect.width());
   pos.push_back(rect.y() + rect.height());
 
-  glUniform2f(_uniform_locs[INFO_UNIF_SIZE], 0.f, 0.f);
-  glUniform4f(_uniform_locs[INFO_UNIF_COLOR], col.redF(), col.greenF(), col.blueF(), col.alphaF());
+  glUniform2f(unifLoc(UNIF_SIZE), 0.0, 0.0);
+  glUniform4f(unifLoc(UNIF_COLOR), col.redF(), col.greenF(), col.blueF(), col.alphaF());
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[INFO_ATTR_POSITION]);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
   glBufferData(GL_ARRAY_BUFFER, pos.size()*sizeof(GLfloat), pos.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(_attr_locs[INFO_ATTR_POSITION], 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
-  glEnableVertexAttribArray(_attr_locs[INFO_ATTR_POSITION]);
+  glVertexAttribPointer(attrLoc(ATTR_POSITION), 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+  glEnableVertexAttribArray(attrLoc(ATTR_POSITION));
 
-  glVertexAttrib1f(_attr_locs[INFO_ATTR_ORDER], 0.f);
-  glDisableVertexAttribArray(_attr_locs[INFO_ATTR_ORDER]);
+  glVertexAttrib1f(attrLoc(ATTR_ORDER), 0.0);
+  glDisableVertexAttribArray(attrLoc(ATTR_ORDER));
 
-  glVertexAttrib1f(_attr_locs[INFO_ATTR_CHAR_VAL], 0.f);
-  glDisableVertexAttribArray(_attr_locs[INFO_ATTR_CHAR_VAL]);
+  glVertexAttrib1f(attrLoc(ATTR_CHAR_VAL), 0.0);
+  glDisableVertexAttribArray(attrLoc(ATTR_CHAR_VAL));
 
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 
 void MenuEngine::drawText(const QByteArray& text, int line, TextAllignement align, const QColor& col) {
-  GLuint tex_id = _fonts->getTexture(_font_tag)->textureId();
-  QSize font_size = _fonts->getFontSize(_font_tag);
+  GLuint tex_id = _fonts->texture(_font_tag);
+  QSize font_size = _fonts->fontSize(_font_tag);
 
   std::vector<GLfloat> pos;
   std::vector<GLfloat> ord, chars;
@@ -765,16 +759,14 @@ void MenuEngine::drawText(const QByteArray& text, int line, TextAllignement alig
 
   switch (align) {
     case ALIGN_CENTER:
-      anchor.setX(_geometry.width()/2 - text.size()*font_size.width()/2);
+      anchor.setX(width()/2 - text.size()*font_size.width()/2);
       break;
     case ALIGN_LEFT:
       anchor.setX(4);
       break;
     case ALIGN_RIGHT:
-      anchor.setX(_geometry.width() - 4 - text.size()*font_size.width());
+      anchor.setX(width() - 4 - text.size()*font_size.width());
       break;
-    default:
-      return;
   }
 
   // From text to vertex data
@@ -789,24 +781,24 @@ void MenuEngine::drawText(const QByteArray& text, int line, TextAllignement alig
   }
 
 
-  glUniform2f(_uniform_locs[INFO_UNIF_SIZE], font_size.width(), font_size.height());
-  glUniform4f(_uniform_locs[INFO_UNIF_COLOR], col.redF(), col.greenF(), col.blueF(), 1.f);
+  glUniform2f(unifLoc(UNIF_SIZE), font_size.width(), font_size.height());
+  glUniform4f(unifLoc(UNIF_COLOR), col.redF(), col.greenF(), col.blueF(), 1.0);
 
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[INFO_ATTR_POSITION]);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
   glBufferData(GL_ARRAY_BUFFER, pos.size()*sizeof(GLfloat), pos.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(_attr_locs[INFO_ATTR_POSITION], 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
-  glEnableVertexAttribArray(_attr_locs[INFO_ATTR_POSITION]);
+  glVertexAttribPointer(attrLoc(ATTR_POSITION), 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+  glEnableVertexAttribArray(attrLoc(ATTR_POSITION));
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[INFO_ATTR_ORDER]);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_ORDER]);
   glBufferData(GL_ARRAY_BUFFER, ord.size()*sizeof(GLfloat), ord.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(_attr_locs[INFO_ATTR_ORDER], 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
-  glEnableVertexAttribArray(_attr_locs[INFO_ATTR_ORDER]);
+  glVertexAttribPointer(attrLoc(ATTR_ORDER), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+  glEnableVertexAttribArray(attrLoc(ATTR_ORDER));
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[INFO_ATTR_CHAR_VAL]);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_CHAR_VAL]);
   glBufferData(GL_ARRAY_BUFFER, chars.size()*sizeof(GLfloat), chars.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(_attr_locs[INFO_ATTR_CHAR_VAL], 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
-  glEnableVertexAttribArray(_attr_locs[INFO_ATTR_CHAR_VAL]);
+  glVertexAttribPointer(attrLoc(ATTR_CHAR_VAL), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+  glEnableVertexAttribArray(attrLoc(ATTR_CHAR_VAL));
 
 
   glActiveTexture(GL_TEXTURE0);
@@ -815,22 +807,4 @@ void MenuEngine::drawText(const QByteArray& text, int line, TextAllignement alig
   glDrawArrays(GL_TRIANGLE_STRIP, 0, ord.size());
 
   glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-
-void MenuEngine::initShader() {
-  _prog->addShaderFromSourceFile(QOpenGLShader::Vertex, SHADERS_PATH + "info.vert.glsl");
-  _prog->addShaderFromSourceFile(QOpenGLShader::Fragment, SHADERS_PATH + "info.frag.glsl");
-  _prog->link();
-  _prog->bind();
-
-  _attr_locs[INFO_ATTR_POSITION]  = _prog->attributeLocation("position");
-  _attr_locs[INFO_ATTR_ORDER]     = _prog->attributeLocation("order");
-  _attr_locs[INFO_ATTR_CHAR_VAL]  = _prog->attributeLocation("char_val");
-
-  _uniform_locs[INFO_UNIF_MVP]    = _prog->uniformLocation("mvp_matrix");
-  _uniform_locs[INFO_UNIF_COLOR]  = _prog->uniformLocation("color");
-  _uniform_locs[INFO_UNIF_SIZE]   = _prog->uniformLocation("size");
-
-  _prog->release();
 }

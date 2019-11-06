@@ -132,7 +132,7 @@
         </table>
       </panel>
 
-      <panel name="danger-details" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
+      <panel name="danger-info" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
         <table name="table" row_count="2" top="3" row_height="18" >
           <column left="4"   width="116" allign="left"  font="F12X14B" color="0,252,252,255"  />  <!-- static text color -->
           <column left="120" width="60"  allign="right" font="F12X14B" color="252,252,84,255" />  <!-- dynamic text color -->
@@ -307,7 +307,7 @@
         </table>
       </panel>
 
-      <panel name="danger-details" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
+      <panel name="danger-info" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
         <table name="table" row_count="2" top="3" row_height="18" >
           <column left="4"   width="116" allign="left"  font="F12X14B" color="0,252,252,255"  />  <!-- static text color -->
           <column left="120" width="60"  allign="right" font="F12X14B" color="252,252,84,255" />  <!-- dynamic text color -->
@@ -481,7 +481,7 @@
         </table>
       </panel>
 
-      <panel name="danger-details" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
+      <panel name="danger-info" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
         <table name="table" row_count="2" top="3" row_height="18" >
           <column left="4"   width="116" allign="left"  font="F12X14B" color="0,252,252,255"  />  <!-- static text color -->
           <column left="120" width="60"  allign="right" font="F12X14B" color="252,252,84,255" />  <!-- dynamic text color -->
@@ -655,7 +655,7 @@
         </table>
       </panel>
 
-      <panel name="danger-details" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
+      <panel name="danger-info" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
         <table name="table" row_count="2" top="3" row_height="18" >
           <column left="4"   width="116" allign="left"  font="F12X14B" color="0,252,252,255"  />  <!-- static text color -->
           <column left="120" width="60"  allign="right" font="F12X14B" color="252,252,84,255" />  <!-- dynamic text color -->
@@ -829,7 +829,7 @@
         </table>
       </panel>
 
-      <panel name="danger-details" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
+      <panel name="danger-info" pos="-4,-264" size="236x38" border_width="1" border_color="64,252,0,255" back_color="0,0,0,255" text_count="6">
         <table name="table" row_count="2" top="3" row_height="18" >
           <column left="4"   width="116" allign="left"  font="F12X14B" color="0,252,252,255"  />  <!-- static text color -->
           <column left="120" width="60"  allign="right" font="F12X14B" color="252,252,84,255" />  <!-- dynamic text color -->

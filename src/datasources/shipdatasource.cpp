@@ -1,6 +1,8 @@
 #include "shipdatasource.h"
 
 #include <cmath>
+#include "../common/math.h"
+
 
 using namespace RLI;
 
@@ -23,7 +25,7 @@ void ShipDataSource::timerEvent(QTimerEvent*) {
   double lon = 145.66 + 0.25 * sin(elapsed);
 
   _ship_state.position = GeoPos(lat, lon);
-  _ship_state.course = fmod(90 + RLI::Math::degs(elapsed), 360);
+  _ship_state.course = fmod(90 + Math::degs(elapsed), 360);
 
   emit shipStateChanged(_ship_state);
 }

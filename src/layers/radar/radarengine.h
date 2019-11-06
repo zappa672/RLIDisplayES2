@@ -1,13 +1,13 @@
 #ifndef RADARENGINE_H
 #define RADARENGINE_H
 
-#include "../fbolayerbase.h"
+#include "../texturelayerbase.h"
 #include "radarpalette.h"
 
 namespace RLI {
 
   // Класс для отрисовки радарного круга
-  class RadarEngine : public FboLayerBase {
+  class RadarEngine : public TextureLayerBase {
     Q_OBJECT
   public:
     RadarEngine(const State& state, const Layout& layout, QOpenGLContext* context, QObject* parent = nullptr);

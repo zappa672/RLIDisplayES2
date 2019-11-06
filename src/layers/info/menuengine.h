@@ -10,111 +10,103 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLShaderProgram>
 
-#include "infofonts.h"
+#include "../fonts.h"
 #include "menuitem.h"
 
-#include "../../common/rlistrings.h"
-#include "../../common/rlilayout.h"
-#include "../routeengine.h"
+#include "../../common/strings.h"
+#include "../../common/state.h"
+#include "../../common/layout.h"
 
+#include "../texturelayerbase.h"
 
-class MenuEngine : public QObject, protected QOpenGLFunctions {
-  Q_OBJECT
+namespace RLI {
 
-public:
-  MenuEngine(const RLIMenuLayout& layout, QOpenGLContext* context, QObject* parent = nullptr);
-  virtual ~MenuEngine();
+  class MenuEngine : public TextureLayerBase {
+    Q_OBJECT
 
-  inline QRect geometry() { return _geometry; }
-  inline GLuint texture() { return _fbo->texture(); }
+  public:
+    MenuEngine(const Layout& layout, const Fonts* fonts, QOpenGLContext* context, QObject* parent = nullptr);
+    virtual ~MenuEngine() override;
 
-  inline void setFonts(InfoFonts* fonts) { _fonts = fonts; }
-  void resize(const RLIMenuLayout& layout);
+  signals:
+    void languageChanged(StrId lang_str);
+    void radarBrightnessChanged(int br);
+    void simulationChanged(StrId lang_str);
 
-signals:
-  void languageChanged(RLIString lang_str);
-  void radarBrightnessChanged(int br);
-  void simulationChanged(RLIString lang_str);
+    void startRouteEdit();
+    void finishRouteEdit();
 
-  void startRouteEdit();
-  void finishRouteEdit();
+    void saveRoute(int index);
+    void loadRoute(int index);
 
-  void saveRoute(int index);
-  void loadRoute(int index);
+    void analogZeroChanged(int val);
+    void tailsModeChanged(StrId lang_str);
+    void bandModeChanged(StrId lang_str);
 
-  void analogZeroChanged(int val);
-  void tailsModeChanged(RLIString lang_str);
-  void bandModeChanged(RLIString lang_str);
+  public slots:
+    void onStateChanged(WidgetState state);
+    void onKeyPressed(QKeyEvent* event);
 
-public slots:
-  void onStateChanged(RLIWidgetState state);
-  void onLanguageChanged(RLIString lang_str);
-  void onKeyPressed(QKeyEvent* event);
+    void paint(const State& state, const Layout& layout) override;
+    void resizeTexture(const Layout& layout) override;
+    void clearTexture() override;
 
-  void update();
+    void onUp();
+    void onDown();
+    void onEnter();
+    void onBack();
 
-  void onUp();
-  void onDown();
-  void onEnter();
-  void onBack();
+    void onAnalogZeroChanged(int val);
 
-  void onAnalogZeroChanged(int val);
+  private:
+    void initMainMenuTree();
+    void initCnfgMenuTree();
 
-private:
-  void initMainMenuTree();
-  void initCnfgMenuTree();
-  void initShader();
+    enum TextAllignement { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT };
 
-  enum TextAllignement { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT };
+    void drawBar();
+    void drawSelection();
 
-  void drawBar();
-  void drawSelection();
+    void drawRect(const QRect& rect, const QColor& col);
+    void drawText(const QByteArray& text, int line, TextAllignement align, const QColor& col);
 
-  void drawRect(const QRect& rect, const QColor& col);
-  void drawText(const QByteArray& text, int line, TextAllignement align, const QColor& col);
+    bool _need_update;
 
-  bool _need_update;
+    QString _font_tag;
+    QDateTime _last_action_time;
 
-  QRect _geometry;
+    MenuItemMenu* _menu;
 
-  QString _font_tag;
-  QDateTime _last_action_time;
+    MenuItemMenu* _main_menu;
+    MenuItemMenu* _cnfg_menu;
 
-  RLIMenuItemMenu* _menu;
+    MenuItemAction* routeEditItem;
+    MenuItemInt* routeLoaderItem;
+    MenuItemInt* routeSaverItem;
 
-  RLIMenuItemMenu* _main_menu;
-  RLIMenuItemMenu* _cnfg_menu;
+    MenuItemInt* analogZeroItem;
 
-  RLIMenuItemAction* routeEditItem;
-  RLIMenuItemInt* routeLoaderItem;
-  RLIMenuItemInt* routeSaverItem;
+    QMatrix4x4 _projection;
 
-  RLIMenuItemInt* analogZeroItem;
+    int _selected_line;
+    bool _selection_active;
 
-//  RouteEngine* _routeEngine;
+    const Fonts* _fonts;
 
-  int _selected_line;
-  bool _selection_active;
+    // -----------------------------------------------
+    enum SHADER_ATTRIBUTES {
+      ATTR_POSITION = 0
+    , ATTR_ORDER    = 1
+    , ATTR_CHAR_VAL = 2
+    , ATTR_COUNT    = 3 };
+    enum SHADER_UNIFORMS
+    { UNIF_MVP    = 0
+    , UNIF_COLOR  = 1
+    , UNIF_SIZE   = 2 };
 
-  InfoFonts* _fonts;
-  RLILang _lang;
+    GLuint _vbo_ids[ATTR_COUNT];
+  };
 
-  QOpenGLFramebufferObject* _fbo;
-  QOpenGLShaderProgram* _prog;
-
-  // -----------------------------------------------
-  enum { INFO_ATTR_POSITION = 0
-       , INFO_ATTR_ORDER = 1
-       , INFO_ATTR_CHAR_VAL = 2
-       , INFO_ATTR_COUNT = 3 } ;
-  enum { INFO_UNIF_MVP = 0
-       , INFO_UNIF_COLOR = 1
-       , INFO_UNIF_SIZE = 2
-       , INFO_UNIF_COUNT = 3 } ;
-
-  GLuint _vbo_ids[INFO_ATTR_COUNT];
-  GLuint _attr_locs[INFO_ATTR_COUNT];
-  GLuint _uniform_locs[INFO_UNIF_COUNT];
 };
 
 #endif // MENUENGINE_H

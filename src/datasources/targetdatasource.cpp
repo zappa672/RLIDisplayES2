@@ -1,6 +1,7 @@
 #include "targetdatasource.h"
 
 #include <cmath>
+#include "../common/math.h"
 
 using namespace RLI;
 
@@ -8,8 +9,7 @@ TargetDataSource::TargetDataSource(int period, QObject *parent) : DataSourceBase
   Target trgt;
 
   trgt.lost         = false;
-  trgt.latitude     = 15.4200;
-  trgt.longtitude   = 145.7600;
+  trgt.position     = { 15.4200, 145.7600 };
   trgt.heading      = 37.0;
   trgt.rotation     = 20.0;
   trgt.course_grnd  = 37.0;
@@ -17,8 +17,7 @@ TargetDataSource::TargetDataSource(int period, QObject *parent) : DataSourceBase
 
   _targets.push_back(trgt);
 
-  trgt.latitude     = 15.1500;
-  trgt.longtitude   = 145.8600;
+  trgt.position     = { 15.1500, 145.8600 };
   trgt.heading      = 123.0;
   trgt.rotation     = -20.0;
   trgt.course_grnd  = 123.0;
@@ -26,8 +25,7 @@ TargetDataSource::TargetDataSource(int period, QObject *parent) : DataSourceBase
 
   _targets.push_back(trgt);
 
-  trgt.latitude     = 15.3500;
-  trgt.longtitude   = 145.5600;
+  trgt.position     = { 15.3500, 145.5600 };
   trgt.heading      = 286.0;
   trgt.rotation     = 0.0;
   trgt.course_grnd  = 286.0;
@@ -35,8 +33,7 @@ TargetDataSource::TargetDataSource(int period, QObject *parent) : DataSourceBase
 
   _targets.push_back(trgt);
 
-  trgt.latitude     = 15.3000;
-  trgt.longtitude   = 144.9300;
+  trgt.position     = { 15.3000, 144.9300 };
   trgt.heading      = -1.0;
   trgt.rotation     = 0.0;
   trgt.course_grnd  = 286.0;
@@ -49,8 +46,6 @@ TargetDataSource::~TargetDataSource() {
   stop();
 }
 
-const float PI = 3.14159265359f;
-
 void TargetDataSource::timerEvent(QTimerEvent* e) {
   Q_UNUSED(e)
 
@@ -61,10 +56,10 @@ void TargetDataSource::timerEvent(QTimerEvent* e) {
 
     double e = DataSourceBase::elapsed();
 
-    target.longtitude = _targets[i].longtitude + 0.02f * (i+1) * sin(e/(2000.f*(i+1)) + i);
-    target.latitude = _targets[i].latitude + 0.02f * (i+1) * cos(e/(2000.f*(i+1)) + i);
-    target.course_grnd = int(450 + 180 * (e/(2000.f*(i+1)) + i) / PI) % 360;
-    if (_targets[i].heading != -1)
+    target.position.lon = _targets[i].position.lon + 0.02 * (i+1) * sin(e/(2000.0*(i+1)) + i);
+    target.position.lat = _targets[i].position.lat + 0.02 * (i+1) * cos(e/(2000.0*(i+1)) + i);
+    target.course_grnd = int(450 + 180 * (e/(2000.0*(i+1)) + i) / Math::PI) % 360;
+    if (_targets[i].heading < 0)
       target.heading = int(360 + target.course_grnd - target.rotation) % 360;
     else
       target.heading = -1;

@@ -3,86 +3,91 @@
 
 #include <QRect>
 #include <QColor>
-#include <QMap>
-#include <QDebug>
 
-#include <QOpenGLFunctions>
-#include <QOpenGLFramebufferObject>
-#include <QOpenGLShaderProgram>
+#include <map>
+#include <vector>
 
-#include "infofonts.h"
-#include "../../common/rlilayout.h"
-#include "../../common/rlistrings.h"
+#include "../texturelayerbase.h"
+#include "../fonts.h"
 
-struct InfoRect {  
-  QColor color;
-  QRect  geometry;
-};
+#include "../../common/layout.h"
+#include "../../common/strings.h"
 
-struct InfoText {
-  RLIString   string;
-  QByteArray  value;
+namespace RLI {
 
-  QString font_tag;
-  QColor  color;
-  QRect   geometry;
-  RLITextAllign allign;
+  struct InfoRect {
+    QColor color;
+    QRect  geometry;
+  };
 
-  InfoText() {
-    string = RLI_STR_NONE;
-    allign = RLITextAllign::CENTER;
-  }
-};
+  struct InfoText {
+    StrId       str_id;
+    QByteArray  value;
 
+    QString font_tag;
+    QColor  color;
+    QRect   geometry;
+    TextAllign allign;
 
-class InfoBlock : protected QOpenGLFunctions {
-
-public:
-  InfoBlock(const RLIInfoPanelLayout& layout, const std::map<QString, int>& text_id_map, QOpenGLContext* context);
-  virtual ~InfoBlock();
-
-  void clear();
-  void resize(const RLIInfoPanelLayout& layout, const std::map<QString, int>& text_id_map);
+    InfoText() {
+      str_id = StrId::NONE;
+      allign = TextAllign::CENTER;
+    }
+  };
 
 
-  inline const QMap<QString, InfoRect>& rectangles() { return _rects; }
-  inline const QVector<InfoText>& texts()      { return _texts; }
+  class InfoBlock : public TextureLayerBase {
+    Q_OBJECT
+
+  public:
+    InfoBlock(PanelId panelId, const Layout& layout, QOpenGLContext* context, const Fonts* fonts, QObject* parent = nullptr);
+    ~InfoBlock() override;
+
+  public slots:
+    void paint(const State& state, const Layout& layout) override;
+    void resizeTexture(const Layout& layout) override;
+    void clearTexture() override;
+
+    inline const InfoRect& rect(const QString& name) { return _rects[name]; }
+    inline const InfoText& text(size_t textId) { return _texts[textId]; }
+
+    void setRect(const QString& rectId, const QRect& r);
+    void setText(size_t textId, StrId str);
+    void setText(size_t textId, const QByteArray& val);
+
+    inline void forceUpdate() { _need_update = true; };
+
+  private:
+    void parseLayout(const PanelLayout& layout);
+
+    QMatrix4x4 _projection;
+    const Fonts* _fonts;
+
+    PanelId _panel_id;
+
+    std::map<QString, InfoRect> _rects;
+    std::vector<InfoText> _texts;
+
+    QColor  _back_color;
+    QColor  _border_color;
+    int     _border_width;
+
+    bool    _need_update;
 
 
-  inline const QRect& geometry()              { return _geometry; }
+    enum SHADER_ATTRIBUTES {
+      ATTR_POSITION = 0
+    , ATTR_ORDER    = 1
+    , ATTR_CHAR_VAL = 2
+    , ATTR_COUNT    = 3 };
+    enum SHADER_UNIFORMS
+    { UNIF_MVP    = 0
+    , UNIF_COLOR  = 1
+    , UNIF_SIZE   = 2 };
 
-  inline bool needUpdate()                    { return _need_update; }
-  inline void clearUpdate()                   { _need_update = false; }
+    GLuint _vbo_ids[ATTR_COUNT];
+  };
 
-  inline void setBackColor(const QColor& c)   { _back_color = c; _need_update = true; }
-  inline const QColor& backColor()            { return _back_color; }
-
-  inline void setBorderWidth(int w)           { _border_width = w; _need_update = true; }
-  inline int borderWidth()                    { return _border_width; }
-
-  inline void setBorderColor(const QColor& c) { _border_color = c; _need_update = true; }
-  inline const QColor& borderColor()          { return _border_color; }
-
-
-  QOpenGLFramebufferObject* fbo()             { return _fbo; }
-
-
-  void setRect(QString rectId, const QRect& r);
-  void setText(int textId, RLIString str);
-  void setText(int textId, const QByteArray& val);
-
-private:
-  QMap<QString, InfoRect> _rects;
-  QVector<InfoText> _texts;
-
-  QRect   _geometry;
-  QColor  _back_color;
-  int     _border_width;
-  QColor  _border_color;
-
-  bool    _need_update;
-  QOpenGLFramebufferObject* _fbo;
-};
-
+}
 
 #endif // INFOBLOCK_H

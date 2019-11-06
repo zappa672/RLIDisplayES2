@@ -1,12 +1,12 @@
-#include "fbolayerbase.h"
+#include "texturelayerbase.h"
 
 using namespace RLI;
 
-FboLayerBase::FboLayerBase(const QRect& rect, QOpenGLContext* context, QObject* parent) : LayerBase(context, parent) {
+TextureLayerBase::TextureLayerBase(const QRect& rect, QOpenGLContext* context, QObject* parent) : LayerBase(context, parent) {
   resize(rect);
 }
 
-FboLayerBase::~FboLayerBase() {
+TextureLayerBase::~TextureLayerBase() {
   if (!_fbo_rect.isEmpty()) {
     glDeleteFramebuffers(1, &_fbo_id);
     glDeleteRenderbuffers(1, &_depth_rbo_id);
@@ -14,7 +14,7 @@ FboLayerBase::~FboLayerBase() {
   }
 }
 
-void FboLayerBase::clear(float r, float g, float b, float a, float d) {
+void TextureLayerBase::clear(float r, float g, float b, float a, float d) {
   glBindFramebuffer(GL_FRAMEBUFFER, _fbo_id);
 
   glDisable(GL_BLEND);
@@ -28,7 +28,7 @@ void FboLayerBase::clear(float r, float g, float b, float a, float d) {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FboLayerBase::resize(const QRect& rect) {
+void TextureLayerBase::resize(const QRect& rect) {
   if (rect.width() <= 0 || rect.width() <= 0 || rect == _fbo_rect)
     return;
 

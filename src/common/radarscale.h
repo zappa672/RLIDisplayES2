@@ -42,7 +42,7 @@ namespace RLI {
   public:
     RadarScale();
 
-    const Scale* getCurScale(void);
+    inline const Scale* current() const { return _current; }
 
     int nextScale(void);
     int prevScale(void);
@@ -54,7 +54,7 @@ namespace RLI {
     static SoundingPulses getPrevSndPlsType(SoundingPulses sndpls);
 
     SoundingPulses sndpls;
-    const Scale *current;
+    const Scale* _current;
   };
 
 }

@@ -3,7 +3,7 @@
 using namespace RLI;
 
 MagnifierEngine::MagnifierEngine(const State&, const Layout& layout, QOpenGLContext* context, QObject* parent)
-  : FboLayerBase(layout.magnifier.geometry, context, parent) {
+  : TextureLayerBase(layout.magnifier.geometry, context, parent) {
 
   initializeOpenGLFunctions();
 
@@ -32,11 +32,11 @@ MagnifierEngine::~MagnifierEngine() {
 }
 
 void MagnifierEngine::resizeTexture(const Layout& layout) {
-  FboLayerBase::resize(layout.magnifier.geometry);
+  TextureLayerBase::resize(layout.magnifier.geometry);
 }
 
 void MagnifierEngine::clearTexture() {
-  FboLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
+  TextureLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
 }
 
 void MagnifierEngine::paint(const State& s, const Layout&) {

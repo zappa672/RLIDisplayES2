@@ -1,5 +1,5 @@
-#ifndef FBOLAYERBASE_H
-#define FBOLAYERBASE_H
+#ifndef TEXTURELAYERBASE_H
+#define TEXTURELAYERBASE_H
 
 #include <QRect>
 #include "../common/layout.h"
@@ -7,11 +7,11 @@
 
 namespace RLI {
 
-  class FboLayerBase : public LayerBase {
+  class TextureLayerBase : public LayerBase {
     Q_OBJECT
   public:
-    FboLayerBase(const QRect& size, QOpenGLContext* context, QObject* parent = nullptr);
-    virtual ~FboLayerBase();
+    TextureLayerBase(const QRect& size, QOpenGLContext* context, QObject* parent = nullptr);
+    virtual ~TextureLayerBase();
 
     inline const QRect&   rect()    const { return _fbo_rect; }
 
@@ -41,4 +41,4 @@ namespace RLI {
 
 }
 
-#endif // FBOLAYERBASE_H
+#endif // TEXTURELAYERBASE_H

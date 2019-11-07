@@ -5,6 +5,8 @@
 #include <QDateTime>
 #include <QApplication>
 
+#include <iostream>
+
 
 using namespace RLI;
 
@@ -30,7 +32,7 @@ MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
 MainWidget::~MainWidget() {
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "~MainWidget start";
 
-  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete datasources";
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete datasources";
   for (auto ds: _data_sources) {
     ds->stop();
     delete ds;
@@ -41,41 +43,50 @@ MainWidget::~MainWidget() {
 
   killTimer(_timerId);
 
-  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete fonts";
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete fonts";
   delete _fonts;
 
-  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete simple layers";
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete simple layers";
   for (auto lr: _simple_layers)
     delete lr;
 
-  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete fbo layers";
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete fbo layers";
   for (auto lr: _tex_layers)
     delete lr;
 
-  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "delete info layer";
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete Info layer";
   delete _info_layer;
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "~MainWidget finish";
 }
 
 void MainWidget::debugInfo() {
-  qDebug() << "";
-  qDebug() << "Vendor: " << reinterpret_cast<const char*>( glGetString(GL_VENDOR) );
-  qDebug() << "Renderer: " << reinterpret_cast<const char*>( glGetString(GL_RENDERER) );
-  qDebug() << "OpenGL: " << reinterpret_cast<const char*>( glGetString(GL_VERSION) );
-  qDebug() << "Shaders: " << reinterpret_cast<const char*>( glGetString(GL_SHADING_LANGUAGE_VERSION) );
+  std::cout << "OpenGL debug info start" << std::endl;
+  std::cout << "-----------------------" << std::endl;
+  std::cout << "Vendor: " << reinterpret_cast<const char*>( glGetString(GL_VENDOR) ) << std::endl;
+  std::cout << "Renderer: " << reinterpret_cast<const char*>( glGetString(GL_RENDERER) ) << std::endl;
+  std::cout << "OpenGL: " << reinterpret_cast<const char*>( glGetString(GL_VERSION) ) << std::endl;
+  std::cout << "Shaders: " << reinterpret_cast<const char*>( glGetString(GL_SHADING_LANGUAGE_VERSION) ) << std::endl;
 
-//  qDebug() << "";
-//  qDebug() << "Extensions: ";
-//  QString exts((const char*) glGetString(GL_EXTENSIONS));
-//  for (QString ext : exts.split(" "))
-//     qDebug() << "\t" << ext;
-//  qDebug() << "";
+  std::cout << std::endl << "Extensions: " << reinterpret_cast<const char*>( glGetString(GL_EXTENSIONS) ) << std::endl << std::endl;
 
-//  int val;
-//  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &val);
-//  qDebug() << "Max texture image units: " << val;
-//  qDebug() << "";
+  int val;
+  glGetIntegerv(GL_MAX_FRAMEBUFFER_WIDTH, &val);
+  std::cout << "GL_MAX_FRAMEBUFFER_WIDTH: " << val << std::endl;
+
+  glGetIntegerv(GL_MAX_FRAMEBUFFER_HEIGHT, &val);
+  std::cout << "GL_MAX_FRAMEBUFFER_HEIGHT: " << val << std::endl;
+
+  glGetIntegerv(GL_MAX_FRAMEBUFFER_LAYERS, &val);
+  std::cout << "GL_MAX_FRAMEBUFFER_LAYERS: " << val << std::endl;
+
+  glGetIntegerv(GL_MAX_FRAMEBUFFER_SAMPLES, &val);
+  std::cout << "GL_MAX_FRAMEBUFFER_SAMPLES: " << val << std::endl;
+
+  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &val);
+  std::cout << "GL_MAX_TEXTURE_IMAGE_UNITS: " << val << std::endl;
+
+  std::cout << "-----------------------" << std::endl;
 }
 
 void MainWidget::timerEvent(QTimerEvent*) {
@@ -248,7 +259,7 @@ void MainWidget::paintGL() {
 
   drawRect(menuLayer()->geometry(), menuLayer()->texId());
 
-  //drawRect(magnifierLayer()->geometry(), magnifierLayer()->texId());
+  drawRect(magnifierLayer()->geometry(), magnifierLayer()->texId());
 
   for (auto block: _info_layer->blocks())
     drawRect(block.second->geometry(), block.second->texId());

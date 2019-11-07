@@ -62,5 +62,8 @@ void TextureLayerBase::resize(const QRect& rect) {
 
   _fbo_rect = rect;
 
+  _projection.setToIdentity();
+  _projection.ortho(0.f, rect.width(), 0.f, rect.height(), -1.f, 1.f);
+
   clear(1.0f, 1.0f, 1.0f, 0.0f, 0.0f);
 }

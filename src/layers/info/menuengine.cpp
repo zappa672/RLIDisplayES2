@@ -23,9 +23,6 @@ MenuEngine::MenuEngine(const Layout& layout, const Fonts* fonts, QOpenGLContext*
   _selected_line = 1;
   _selection_active = false;
 
-  _projection.setToIdentity();
-  _projection.ortho(0.f, width(), 0.f, height(), -1.f, 1.f);
-
   glGenBuffers(ATTR_COUNT, _vbo_ids);
 
   static const QMap<QString, int> attr_inices
@@ -593,9 +590,6 @@ void MenuEngine::onBack() {
 void MenuEngine::resizeTexture(const Layout& layout) {
   TextureLayerBase::resize(layout.menu.geometry);
 
-  _projection.setToIdentity();
-  _projection.ortho(0.f, width(), 0.f, height(), -1.f, 1.f);
-
   _font_tag = layout.menu.font;
   _need_update = true;
 }
@@ -621,7 +615,7 @@ void MenuEngine::paint(const State& state, const Layout& layout) {
 
   glUseProgram(progId());
 
-  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, _projection.data());
+  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, projection().data());
 
   // Border
   drawRect(QRect(QPoint(0, 0), QSize(width(), 1)), MENU_BORDER_COLOR);

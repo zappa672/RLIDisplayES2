@@ -7,11 +7,7 @@ using namespace RLI;
 
 InfoBlock::InfoBlock(PanelId panelId, const Layout& layout, QOpenGLContext* context, const Fonts* fonts, QObject* parent)
   : TextureLayerBase(layout.panels[panelId].geometry, context, parent), _fonts(fonts), _panel_id(panelId) {
-
   parseLayout(layout.panels[panelId]);
-
-  _projection.setToIdentity();
-  _projection.ortho(0.f, width(), 0.f, height(), -1.f, 1.f);
 
   glGenBuffers(ATTR_COUNT, _vbo_ids);
 
@@ -35,33 +31,56 @@ InfoBlock::~InfoBlock() {
 }
 
 void InfoBlock::parseLayout(const PanelLayout& layout) {
+  _back_color   = layout.back_color;
+  _border_color = layout.border_color;
+  _border_width = layout.border_width;
 
+  for (const InfoRectLayout& rl : layout.rects) {
+    InfoRect rect;
+    rect.geometry = rl.rect;
+    rect.color = rl.color;
+    _rects[rl.name] = rect;
+  }
+
+  _texts = std::vector<InfoText>(static_cast<size_t>(layout.texts.size()));
+  for (const InfoTextLayout& tl : layout.texts) {
+    InfoText text;
+    text.geometry = tl.bounding_rect;
+    text.color = tl.color;
+    text.allign = tl.allign;
+    text.font_tag = tl.font_tag;
+    text.str_id = _texts[tl.text_id].str_id;
+    text.value = _texts[tl.text_id].value;
+
+    _texts[tl.text_id] = text;
+  }
 }
 
 void InfoBlock::setRect(const QString& rectId, const QRect& rect) {
-  //_rects[rectId].geometry = rect;
-  //_need_update = true;
+  _rects[rectId].geometry = rect;
+  _need_update = true;
 }
 
 void InfoBlock::setText(size_t textId, StrId str) {
-  //_texts[textId].str_id = str;
-  //_texts[textId].value.clear();
-  //_need_update = true;
+  _texts[textId].str_id = str;
+  _texts[textId].value.clear();
+  _need_update = true;
 }
 
 void InfoBlock::setText(size_t textId, const QByteArray& val) {
-  //_texts[textId].str_id = StrId::NONE;
-  //_texts[textId].value = val;
-  //_need_update = true;
+  _texts[textId].str_id = StrId::NONE;
+  _texts[textId].value = val;
+  _need_update = true;
 }
 
 
 
-void InfoBlock::paint(const State&, const Layout&) {
+void InfoBlock::paint(const State& state, const Layout&) {
   if (!_need_update)
     return;
 
   glDisable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
 
   glBindFramebuffer(GL_FRAMEBUFFER, fboId());
   glUseProgram(progId());
@@ -71,9 +90,24 @@ void InfoBlock::paint(const State&, const Layout&) {
   glClearColor(0.12f, 0.63f, 0.10f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  //_prog->setUniformValue(_uniform_locs[INFO_UNIF_MVP], _projection);
-  //
-  //updateBlock(block, fonts);
+
+  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, projection().data());
+
+  glClearColor(_back_color.redF(), _back_color.greenF(), _back_color.blueF(), 1.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  if (_border_width >= 1) {
+    drawRect(QRect(QPoint(0, 0), QSize(width(), _border_width)), _border_color);
+    drawRect(QRect(QPoint(0, 0), QSize(_border_width, height())), _border_color);
+    drawRect(QRect(QPoint(0, height() - _border_width), QSize(width(), _border_width)), _border_color);
+    drawRect(QRect(QPoint(width() - _border_width, 0), QSize(_border_width, height())), _border_color);
+  }
+
+  for (auto rect : _rects)
+    drawRect(rect.second.geometry, rect.second.color);
+
+  for (auto text : _texts)
+    drawText(state, text, _fonts);
 
   glUseProgram(0);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -84,44 +118,15 @@ void InfoBlock::paint(const State&, const Layout&) {
 void InfoBlock::resizeTexture(const Layout& layout) {
   TextureLayerBase::resize(layout.panels[_panel_id].geometry);
   parseLayout(layout.panels[_panel_id]);
-  _projection.setToIdentity();
-  _projection.ortho(0.f, width(), 0.f, height(), -1.f, 1.f);
   _need_update = true;
 }
 
 void InfoBlock::clearTexture() {
-  TextureLayerBase::clear(1.f, 1.f, 1.f, 0.f, 0.f);
+  TextureLayerBase::clear(1.f, 1.f, 1.f, 1.f, 0.f);
 }
 
 
-
-/*
-void InfoEngine::updateBlock(InfoBlock* b, InfoFonts* fonts) {
-  QColor bckCol = b->backColor();
-  QColor brdCol = b->borderColor();
-  int    brdWid = b->borderWidth();
-  QRect  geom   = QRect(QPoint(0, 0), b->geometry().size());
-
-  glClearColor(bckCol.redF(), bckCol.greenF(), bckCol.blueF(), bckCol.alphaF());
-  glClear(GL_COLOR_BUFFER_BIT);
-
-  if (brdWid >= 1) {
-    drawRect(QRect(QPoint(0, 0), QSize(geom.width(), brdWid)), brdCol);
-    drawRect(QRect(QPoint(0, 0), QSize(brdWid, geom.height())), brdCol);
-    drawRect(QRect(QPoint(0, geom.height() - brdWid), QSize(geom.width(), brdWid)), brdCol);
-    drawRect(QRect(QPoint(geom.width() - brdWid, 0), QSize(brdWid, geom.height())), brdCol);
-  }
-
-  for (const InfoRect& rect : b->rectangles())
-    drawRect(rect.geometry, rect.color);
-
-  for (const InfoText& text : b->texts())
-    drawText(text, fonts);
-
-  b->clearUpdate();
-}
-
-void InfoEngine::drawText(const State& state, const InfoText& text, Fonts* fonts) {
+void InfoBlock::drawText(const State& state, const InfoText& text, const Fonts* fonts) {
   GLuint tex_id = fonts->texture(text.font_tag);
   QSize font_size = fonts->fontSize(text.font_tag);
 
@@ -158,24 +163,24 @@ void InfoEngine::drawText(const State& state, const InfoText& text, Fonts* fonts
   }
 
 
-  glUniform2f(_uniform_locs[INFO_UNIF_SIZE], font_size.width(), font_size.height());
-  glUniform4f(_uniform_locs[INFO_UNIF_COLOR], text.color.redF(), text.color.greenF(), text.color.blueF(), 1.f);
+  glUniform2f(unifLoc(UNIF_SIZE), font_size.width(), font_size.height());
+  glUniform4f(unifLoc(UNIF_COLOR), text.color.redF(), text.color.greenF(), text.color.blueF(), 1.f);
 
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[INFO_ATTR_POSITION]);
-  glBufferData(GL_ARRAY_BUFFER, pos.size()*sizeof(GLfloat), pos.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(_attr_locs[INFO_ATTR_POSITION], 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
-  glEnableVertexAttribArray(_attr_locs[INFO_ATTR_POSITION]);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  glBufferData(GL_ARRAY_BUFFER, static_cast<uint>(pos.size())*sizeof(GLfloat), pos.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(attrLoc(ATTR_POSITION), 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+  glEnableVertexAttribArray(attrLoc(ATTR_POSITION));
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[INFO_ATTR_ORDER]);
-  glBufferData(GL_ARRAY_BUFFER, ord.size()*sizeof(GLfloat), ord.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(_attr_locs[INFO_ATTR_ORDER], 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
-  glEnableVertexAttribArray(_attr_locs[INFO_ATTR_ORDER]);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_ORDER]);
+  glBufferData(GL_ARRAY_BUFFER, static_cast<uint>(ord.size())*sizeof(GLfloat), ord.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(attrLoc(ATTR_ORDER), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+  glEnableVertexAttribArray(attrLoc(ATTR_ORDER));
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[INFO_ATTR_CHAR_VAL]);
-  glBufferData(GL_ARRAY_BUFFER, chars.size()*sizeof(GLfloat), chars.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(_attr_locs[INFO_ATTR_CHAR_VAL], 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
-  glEnableVertexAttribArray(_attr_locs[INFO_ATTR_CHAR_VAL]);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_CHAR_VAL]);
+  glBufferData(GL_ARRAY_BUFFER, static_cast<uint>(chars.size())*sizeof(GLfloat), chars.data(), GL_STATIC_DRAW);
+  glVertexAttribPointer(attrLoc(ATTR_CHAR_VAL), 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+  glEnableVertexAttribArray(attrLoc(ATTR_CHAR_VAL));
 
 
   glActiveTexture(GL_TEXTURE0);
@@ -185,7 +190,7 @@ void InfoEngine::drawText(const State& state, const InfoText& text, Fonts* fonts
 }
 
 
-void InfoEngine::drawRect(const QRect& rect, const QColor& col) {
+void InfoBlock::drawRect(const QRect& rect, const QColor& col) {
   std::vector<GLfloat> pos;
 
   pos.push_back(rect.x());
@@ -197,20 +202,19 @@ void InfoEngine::drawRect(const QRect& rect, const QColor& col) {
   pos.push_back(rect.x() + rect.width());
   pos.push_back(rect.y() + rect.height());
 
-  glUniform2f(_uniform_locs[INFO_UNIF_SIZE], 0.f, 0.f);
-  glUniform4f(_uniform_locs[INFO_UNIF_COLOR], col.redF(), col.greenF(), col.blueF(), col.alphaF());
+  glUniform2f(unifLoc(UNIF_SIZE), 0.f, 0.f);
+  glUniform4f(unifLoc(UNIF_COLOR), col.redF(), col.greenF(), col.blueF(), col.alphaF());
 
-  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[INFO_ATTR_POSITION]);
-  glBufferData(GL_ARRAY_BUFFER, pos.size()*sizeof(GLfloat), pos.data(), GL_DYNAMIC_DRAW);
-  glVertexAttribPointer(_attr_locs[INFO_ATTR_POSITION], 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
-  glEnableVertexAttribArray(_attr_locs[INFO_ATTR_POSITION]);
+  glBindBuffer(GL_ARRAY_BUFFER, _vbo_ids[ATTR_POSITION]);
+  glBufferData(GL_ARRAY_BUFFER, static_cast<uint>(pos.size())*sizeof(GLfloat), pos.data(), GL_DYNAMIC_DRAW);
+  glVertexAttribPointer(attrLoc(ATTR_POSITION), 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+  glEnableVertexAttribArray(attrLoc(ATTR_POSITION));
 
-  glVertexAttrib1f(_attr_locs[INFO_ATTR_ORDER], 0.f);
-  glDisableVertexAttribArray(_attr_locs[INFO_ATTR_ORDER]);
+  glVertexAttrib1f(attrLoc(ATTR_ORDER), 0.f);
+  glDisableVertexAttribArray(attrLoc(ATTR_ORDER));
 
-  glVertexAttrib1f(_attr_locs[INFO_ATTR_CHAR_VAL], 0.f);
-  glDisableVertexAttribArray(_attr_locs[INFO_ATTR_CHAR_VAL]);
+  glVertexAttrib1f(attrLoc(ATTR_CHAR_VAL), 0.f);
+  glDisableVertexAttribArray(attrLoc(ATTR_CHAR_VAL));
 
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
-*/

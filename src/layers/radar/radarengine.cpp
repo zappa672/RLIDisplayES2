@@ -146,11 +146,7 @@ QMatrix4x4 RadarEngine::getMVP(const State& state) {
   view.setToIdentity();
   view.translate(width() / 2.f, height() / 2.f);
 
-  QMatrix4x4 projection;
-  projection.setToIdentity();
-  projection.ortho(0.f, width(), 0.f, height(), -255.f, 255.f);
-
-  return projection*view*modelTransform;
+  return projection()*view*modelTransform;
 }
 
 void RadarEngine::paint(const State& state, const Layout& layout) {

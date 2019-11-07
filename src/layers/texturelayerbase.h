@@ -2,6 +2,8 @@
 #define TEXTURELAYERBASE_H
 
 #include <QRect>
+#include <QMatrix4x4>
+
 #include "../common/layout.h"
 #include "layerbase.h"
 
@@ -27,12 +29,15 @@ namespace RLI {
     virtual void clearTexture() =0;
 
   protected:
-    inline const GLuint&  fboId()   const { return _fbo_id; }
+    inline const QMatrix4x4&  projection()  const { return _projection; }
+    inline const GLuint&      fboId()       const { return _fbo_id; }
 
     void clear(float r, float g, float b, float a, float d);
-    virtual void resize(const QRect& size);
+    void resize(const QRect& size);
 
   private:
+    QMatrix4x4 _projection;
+
     GLuint _fbo_id;
     GLuint _fbo_tex_id;
     GLuint _depth_rbo_id;        

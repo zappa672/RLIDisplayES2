@@ -86,8 +86,6 @@ namespace RLI {
 
     MenuItemInt* analogZeroItem;
 
-    QMatrix4x4 _projection;
-
     int _selected_line;
     bool _selection_active;
 

@@ -74,7 +74,7 @@ namespace RLI {
     // Radar parameters
     int peleng_count      { 4096 };
     int peleng_size       { 800  };
-    float amp_threashold  { 8.f  };
+    float amp_threashold  { 8.f / 255.f  };
 
     // Magnifier parameters
     int magn_min_rad    { 96  };

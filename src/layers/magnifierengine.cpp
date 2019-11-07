@@ -54,11 +54,7 @@ void MagnifierEngine::paint(const State& s, const Layout&) {
   glClearColor(0.0f, 0.0f, 0.0f, 1.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  QMatrix4x4 projection;
-  projection.setToIdentity();
-  projection.ortho(0.f, width(), height(), 0.f, -1.f, 1.f);
-
-  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, projection.data());
+  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, projection().data());
   glUniform1i(unifLoc(UNIF_TEXTURE), 0);
 
   glActiveTexture(GL_TEXTURE0);

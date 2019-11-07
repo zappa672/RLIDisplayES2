@@ -22,112 +22,112 @@ inline uint qHash(const QSize& s)
 
 namespace RLI {
 
-  static constexpr int PNL_GAIN_TEXT_ID     = 0;
-  static constexpr int PNL_WATER_TEXT_ID    = 0;
-  static constexpr int PNL_RAIN_TEXT_ID     = 0;
-  static constexpr int PNL_APCH_TEXT_ID     = 0;
-  static constexpr int PNL_EMISSION_TEXT_ID = 0;
+  static constexpr size_t PNL_GAIN_TEXT_ID     = 0;
+  static constexpr size_t PNL_WATER_TEXT_ID    = 0;
+  static constexpr size_t PNL_RAIN_TEXT_ID     = 0;
+  static constexpr size_t PNL_APCH_TEXT_ID     = 0;
+  static constexpr size_t PNL_EMISSION_TEXT_ID = 0;
 
 
-  static constexpr int PNL_LABEL5_TEXT_ID       = 0;
-  static constexpr int PNL_BAND_TEXT_ID         = 0;
-  static constexpr int PNL_ORIENTATION_TEXT_ID  = 0;
-  static constexpr int PNL_LABEL2_TEXT_ID       = 0;
-  static constexpr int PNL_LABEL3_TEXT_ID       = 0;
-  static constexpr int PNL_LABEL4_TEXT_ID       = 0;
+  static constexpr size_t PNL_LABEL5_TEXT_ID       = 0;
+  static constexpr size_t PNL_BAND_TEXT_ID         = 0;
+  static constexpr size_t PNL_ORIENTATION_TEXT_ID  = 0;
+  static constexpr size_t PNL_LABEL2_TEXT_ID       = 0;
+  static constexpr size_t PNL_LABEL3_TEXT_ID       = 0;
+  static constexpr size_t PNL_LABEL4_TEXT_ID       = 0;
 
-  static constexpr int PNL_FPS_LABEL_TEXT_ID  = 0;
-  static constexpr int PNL_FPS_VALUE_TEXT_ID  = 1;
-
-
-  static constexpr int PNL_SCALE_SCALE1_TEXT_ID = 0;
-  static constexpr int PNL_SCALE_SLASH_TEXT_ID  = 1;
-  static constexpr int PNL_SCALE_SCALE2_TEXT_ID = 2;
-  static constexpr int PNL_SCALE_UNITS_TEXT_ID  = 3;
-
-  static constexpr int PNL_VN_HEADER_TEXT_ID  = 0;
-  static constexpr int PNL_VN_TBL_0_0_TEXT_ID = 1;
-  static constexpr int PNL_VN_TBL_0_1_TEXT_ID = 2;
-  static constexpr int PNL_VN_TBL_0_2_TEXT_ID = 3;
-  static constexpr int PNL_VN_TBL_1_0_TEXT_ID = 4;
-  static constexpr int PNL_VN_TBL_1_1_TEXT_ID = 5;
-  static constexpr int PNL_VN_TBL_1_2_TEXT_ID = 6;
-
-  static constexpr int PNL_VD_HEADER_TEXT_ID  = 0;
-  static constexpr int PNL_VD_TBL_0_0_TEXT_ID = 1;
-  static constexpr int PNL_VD_TBL_0_1_TEXT_ID = 2;
-
-  static constexpr int PNL_COURSE_TBL_0_0_TEXT_ID = 0;
-  static constexpr int PNL_COURSE_TBL_0_1_TEXT_ID = 1;
-  static constexpr int PNL_COURSE_TBL_0_2_TEXT_ID = 2;
-  static constexpr int PNL_COURSE_TBL_1_0_TEXT_ID = 3;
-  static constexpr int PNL_COURSE_TBL_1_1_TEXT_ID = 4;
-  static constexpr int PNL_COURSE_TBL_1_2_TEXT_ID = 5;
+  static constexpr size_t PNL_FPS_LABEL_TEXT_ID  = 0;
+  static constexpr size_t PNL_FPS_VALUE_TEXT_ID  = 1;
 
 
-  static constexpr int PNL_POSITION_TBL_0_0_TEXT_ID = 0;
-  static constexpr int PNL_POSITION_TBL_0_1_TEXT_ID = 1;
-  static constexpr int PNL_POSITION_TBL_1_0_TEXT_ID = 2;
-  static constexpr int PNL_POSITION_TBL_1_1_TEXT_ID = 3;
+  static constexpr size_t PNL_SCALE_SCALE1_TEXT_ID = 0;
+  static constexpr size_t PNL_SCALE_SLASH_TEXT_ID  = 1;
+  static constexpr size_t PNL_SCALE_SCALE2_TEXT_ID = 2;
+  static constexpr size_t PNL_SCALE_UNITS_TEXT_ID  = 3;
 
-  //static constexpr int RLI_PNL_BLANK...
+  static constexpr size_t PNL_VN_HEADER_TEXT_ID  = 0;
+  static constexpr size_t PNL_VN_TBL_0_0_TEXT_ID = 1;
+  static constexpr size_t PNL_VN_TBL_0_1_TEXT_ID = 2;
+  static constexpr size_t PNL_VN_TBL_0_2_TEXT_ID = 3;
+  static constexpr size_t PNL_VN_TBL_1_0_TEXT_ID = 4;
+  static constexpr size_t PNL_VN_TBL_1_1_TEXT_ID = 5;
+  static constexpr size_t PNL_VN_TBL_1_2_TEXT_ID = 6;
 
-  static constexpr int PNL_CLOCK_LABEL_TEXT_ID  = 0;
-  static constexpr int PNL_CLOCK_TIME_TEXT_ID   = 1;
+  static constexpr size_t PNL_VD_HEADER_TEXT_ID  = 0;
+  static constexpr size_t PNL_VD_TBL_0_0_TEXT_ID = 1;
+  static constexpr size_t PNL_VD_TBL_0_1_TEXT_ID = 2;
+
+  static constexpr size_t PNL_COURSE_TBL_0_0_TEXT_ID = 0;
+  static constexpr size_t PNL_COURSE_TBL_0_1_TEXT_ID = 1;
+  static constexpr size_t PNL_COURSE_TBL_0_2_TEXT_ID = 2;
+  static constexpr size_t PNL_COURSE_TBL_1_0_TEXT_ID = 3;
+  static constexpr size_t PNL_COURSE_TBL_1_1_TEXT_ID = 4;
+  static constexpr size_t PNL_COURSE_TBL_1_2_TEXT_ID = 5;
 
 
-  static constexpr int PNL_DANGER_LABEL_TEXT_ID = 0;
+  static constexpr size_t PNL_POSITION_TBL_0_0_TEXT_ID = 0;
+  static constexpr size_t PNL_POSITION_TBL_0_1_TEXT_ID = 1;
+  static constexpr size_t PNL_POSITION_TBL_1_0_TEXT_ID = 2;
+  static constexpr size_t PNL_POSITION_TBL_1_1_TEXT_ID = 3;
 
-  static constexpr int PNL_TAILS_TBL_0_0_TEXT_ID  = 0;
-  static constexpr int PNL_TAILS_TBL_0_1_TEXT_ID  = 1;
-  static constexpr int PNL_TAILS_TBL_0_2_TEXT_ID  = 2;
+  //static constexpr size_t RLI_PNL_BLANK...
 
-  static constexpr int PNL_DANGER_INFO_TBL_0_0_TEXT_ID = 0;
-  static constexpr int PNL_DANGER_INFO_TBL_0_1_TEXT_ID = 1;
-  static constexpr int PNL_DANGER_INFO_TBL_0_2_TEXT_ID = 2;
-  static constexpr int PNL_DANGER_INFO_TBL_1_0_TEXT_ID = 3;
-  static constexpr int PNL_DANGER_INFO_TBL_1_1_TEXT_ID = 4;
-  static constexpr int PNL_DANGER_INFO_TBL_1_2_TEXT_ID = 5;
+  static constexpr size_t PNL_CLOCK_LABEL_TEXT_ID  = 0;
+  static constexpr size_t PNL_CLOCK_TIME_TEXT_ID   = 1;
 
-  static constexpr int PNL_VECTOR_TBL_0_0_TEXT_ID = 0;
-  static constexpr int PNL_VECTOR_TBL_0_1_TEXT_ID = 1;
-  static constexpr int PNL_VECTOR_TBL_0_2_TEXT_ID = 2;
 
-  static constexpr int PNL_TARGETS_HEADER_TEXT_ID   = 0;
-  static constexpr int PNL_TARGETS_CURRENT_TEXT_ID  = 1;
-  static constexpr int PNL_TARGETS_COUNT_TEXT_ID    = 2;
-  static constexpr int PNL_TARGETS_TBL_0_0_TEXT_ID  = 3;
-  static constexpr int PNL_TARGETS_TBL_0_1_TEXT_ID  = 4;
-  static constexpr int PNL_TARGETS_TBL_0_2_TEXT_ID  = 5;
-  static constexpr int PNL_TARGETS_TBL_1_0_TEXT_ID  = 6;
-  static constexpr int PNL_TARGETS_TBL_1_1_TEXT_ID  = 7;
-  static constexpr int PNL_TARGETS_TBL_1_2_TEXT_ID  = 8;
-  static constexpr int PNL_TARGETS_TBL_2_0_TEXT_ID  = 9;
-  static constexpr int PNL_TARGETS_TBL_2_1_TEXT_ID  = 10;
-  static constexpr int PNL_TARGETS_TBL_2_2_TEXT_ID  = 11;
-  static constexpr int PNL_TARGETS_TBL_3_0_TEXT_ID  = 12;
-  static constexpr int PNL_TARGETS_TBL_3_1_TEXT_ID  = 13;
-  static constexpr int PNL_TARGETS_TBL_3_2_TEXT_ID  = 14;
-  static constexpr int PNL_TARGETS_TBL_4_0_TEXT_ID  = 15;
-  static constexpr int PNL_TARGETS_TBL_4_1_TEXT_ID  = 16;
-  static constexpr int PNL_TARGETS_TBL_4_2_TEXT_ID  = 17;
-  static constexpr int PNL_TARGETS_TBL_5_0_TEXT_ID  = 18;
-  static constexpr int PNL_TARGETS_TBL_5_1_TEXT_ID  = 19;
-  static constexpr int PNL_TARGETS_TBL_5_2_TEXT_ID  = 20;
-  static constexpr int PNL_TARGETS_TBL_6_0_TEXT_ID  = 21;
-  static constexpr int PNL_TARGETS_TBL_6_1_TEXT_ID  = 22;
-  static constexpr int PNL_TARGETS_TBL_6_2_TEXT_ID  = 23;
-  static constexpr int PNL_TARGETS_TBL_7_0_TEXT_ID  = 24;
-  static constexpr int PNL_TARGETS_TBL_7_1_TEXT_ID  = 25;
-  static constexpr int PNL_TARGETS_TBL_7_2_TEXT_ID  = 26;
+  static constexpr size_t PNL_DANGER_LABEL_TEXT_ID = 0;
 
-  static constexpr int PNL_CURSOR_HEADER_TEXT_ID  = 0;
-  static constexpr int PNL_CURSOR_TBL_0_0_TEXT_ID = 1;
-  static constexpr int PNL_CURSOR_TBL_0_1_TEXT_ID = 2;
-  static constexpr int PNL_CURSOR_TBL_0_2_TEXT_ID = 3;
-  static constexpr int PNL_CURSOR_TBL_1_0_TEXT_ID = 4;
-  static constexpr int PNL_CURSOR_TBL_1_1_TEXT_ID = 5;
-  static constexpr int PNL_CURSOR_TBL_1_2_TEXT_ID = 6;
+  static constexpr size_t PNL_TAILS_TBL_0_0_TEXT_ID  = 0;
+  static constexpr size_t PNL_TAILS_TBL_0_1_TEXT_ID  = 1;
+  static constexpr size_t PNL_TAILS_TBL_0_2_TEXT_ID  = 2;
+
+  static constexpr size_t PNL_DANGER_INFO_TBL_0_0_TEXT_ID = 0;
+  static constexpr size_t PNL_DANGER_INFO_TBL_0_1_TEXT_ID = 1;
+  static constexpr size_t PNL_DANGER_INFO_TBL_0_2_TEXT_ID = 2;
+  static constexpr size_t PNL_DANGER_INFO_TBL_1_0_TEXT_ID = 3;
+  static constexpr size_t PNL_DANGER_INFO_TBL_1_1_TEXT_ID = 4;
+  static constexpr size_t PNL_DANGER_INFO_TBL_1_2_TEXT_ID = 5;
+
+  static constexpr size_t PNL_VECTOR_TBL_0_0_TEXT_ID = 0;
+  static constexpr size_t PNL_VECTOR_TBL_0_1_TEXT_ID = 1;
+  static constexpr size_t PNL_VECTOR_TBL_0_2_TEXT_ID = 2;
+
+  static constexpr size_t PNL_TARGETS_HEADER_TEXT_ID   = 0;
+  static constexpr size_t PNL_TARGETS_CURRENT_TEXT_ID  = 1;
+  static constexpr size_t PNL_TARGETS_COUNT_TEXT_ID    = 2;
+  static constexpr size_t PNL_TARGETS_TBL_0_0_TEXT_ID  = 3;
+  static constexpr size_t PNL_TARGETS_TBL_0_1_TEXT_ID  = 4;
+  static constexpr size_t PNL_TARGETS_TBL_0_2_TEXT_ID  = 5;
+  static constexpr size_t PNL_TARGETS_TBL_1_0_TEXT_ID  = 6;
+  static constexpr size_t PNL_TARGETS_TBL_1_1_TEXT_ID  = 7;
+  static constexpr size_t PNL_TARGETS_TBL_1_2_TEXT_ID  = 8;
+  static constexpr size_t PNL_TARGETS_TBL_2_0_TEXT_ID  = 9;
+  static constexpr size_t PNL_TARGETS_TBL_2_1_TEXT_ID  = 10;
+  static constexpr size_t PNL_TARGETS_TBL_2_2_TEXT_ID  = 11;
+  static constexpr size_t PNL_TARGETS_TBL_3_0_TEXT_ID  = 12;
+  static constexpr size_t PNL_TARGETS_TBL_3_1_TEXT_ID  = 13;
+  static constexpr size_t PNL_TARGETS_TBL_3_2_TEXT_ID  = 14;
+  static constexpr size_t PNL_TARGETS_TBL_4_0_TEXT_ID  = 15;
+  static constexpr size_t PNL_TARGETS_TBL_4_1_TEXT_ID  = 16;
+  static constexpr size_t PNL_TARGETS_TBL_4_2_TEXT_ID  = 17;
+  static constexpr size_t PNL_TARGETS_TBL_5_0_TEXT_ID  = 18;
+  static constexpr size_t PNL_TARGETS_TBL_5_1_TEXT_ID  = 19;
+  static constexpr size_t PNL_TARGETS_TBL_5_2_TEXT_ID  = 20;
+  static constexpr size_t PNL_TARGETS_TBL_6_0_TEXT_ID  = 21;
+  static constexpr size_t PNL_TARGETS_TBL_6_1_TEXT_ID  = 22;
+  static constexpr size_t PNL_TARGETS_TBL_6_2_TEXT_ID  = 23;
+  static constexpr size_t PNL_TARGETS_TBL_7_0_TEXT_ID  = 24;
+  static constexpr size_t PNL_TARGETS_TBL_7_1_TEXT_ID  = 25;
+  static constexpr size_t PNL_TARGETS_TBL_7_2_TEXT_ID  = 26;
+
+  static constexpr size_t PNL_CURSOR_HEADER_TEXT_ID  = 0;
+  static constexpr size_t PNL_CURSOR_TBL_0_0_TEXT_ID = 1;
+  static constexpr size_t PNL_CURSOR_TBL_0_1_TEXT_ID = 2;
+  static constexpr size_t PNL_CURSOR_TBL_0_2_TEXT_ID = 3;
+  static constexpr size_t PNL_CURSOR_TBL_1_0_TEXT_ID = 4;
+  static constexpr size_t PNL_CURSOR_TBL_1_1_TEXT_ID = 5;
+  static constexpr size_t PNL_CURSOR_TBL_1_2_TEXT_ID = 6;
 
   enum class PanelId : unsigned char
   { GAIN        = 0
@@ -172,7 +172,7 @@ namespace RLI {
   };
 
   struct InfoTextLayout {
-    int text_id;
+    size_t text_id;
     QString name;
     QRect bounding_rect;
     TextAllign allign;
@@ -196,7 +196,8 @@ namespace RLI {
   };
 
   struct PanelLayout {
-    PanelId name;
+    PanelId id;
+    QString name;
     QRect geometry;
     int border_width;
     QColor back_color;
@@ -237,7 +238,7 @@ namespace RLI {
     MagnifierLayout  magnifier;
 
     QMap<PanelId, PanelLayout> panels;
-    inline void insertPanel(const PanelLayout& layout) { panels.insert(layout.name, layout); }
+    inline void insertPanel(const PanelLayout& layout) { panels.insert(layout.id, layout); }
   };
 
   class  LayoutManager {

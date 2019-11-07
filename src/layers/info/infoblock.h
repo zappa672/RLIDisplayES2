@@ -55,12 +55,14 @@ namespace RLI {
     void setText(size_t textId, StrId str);
     void setText(size_t textId, const QByteArray& val);
 
-    inline void forceUpdate() { _need_update = true; };
+    inline void forceUpdate() { _need_update = true; }
 
   private:
     void parseLayout(const PanelLayout& layout);
 
-    QMatrix4x4 _projection;
+    void drawText(const State& state, const InfoText& text, const Fonts* fonts);
+    void drawRect(const QRect& rect, const QColor& col);
+
     const Fonts* _fonts;
 
     PanelId _panel_id;

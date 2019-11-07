@@ -95,14 +95,9 @@ void MaskEngine::paint(const State& state, const Layout& layout)  {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-  QMatrix4x4 projection;
-  projection.setToIdentity();
-  projection.ortho(0.f, width(), 0.f, height(), -1.f, 1.f);
-
-
   // Set uniforms
   // ---------------------------------------------------------------------
-  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, projection.data());
+  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, projection().data());
   glUniform1f(unifLoc(UNIF_ANGLE_SHIFT), static_cast<float>(_north_shift));
   glUniform1f(unifLoc(UNIF_CIRCLE_RADIUS), layout.circle.radius);
   glUniform2f(unifLoc(UNIF_CIRCLE_POS), layout.circle.center.x(), layout.circle.center.y());

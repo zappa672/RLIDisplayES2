@@ -2,8 +2,10 @@
 
 #include "common/properties.h"
 
+#include <QScreen>
 #include <QDateTime>
 #include <QApplication>
+#include <QGuiApplication>
 
 #include <iostream>
 
@@ -16,12 +18,12 @@ MainWidget::MainWidget(QWidget *parent) : QOpenGLWidget(parent) {
   _state.peleng_count = qApp->property(PROPERTY_PELENG_COUNT).toInt();
   _state.peleng_size = qApp->property(PROPERTY_PELENG_SIZE).toInt();
 
-  _data_sources.insert(DataSource::Radar, new RadarDataSource(qApp->property(PROPERTY_DATA_DELAY).toInt(), this));
-  _data_sources.insert(DataSource::Ship, new ShipDataSource(1000, this));
-  _data_sources.insert(DataSource::Target, new TargetDataSource(1000, this));
+  _data_sources.emplace(DataSource::Radar, new RadarDataSource(qApp->property(PROPERTY_DATA_DELAY).toInt(), this));
+  _data_sources.emplace(DataSource::Ship, new ShipDataSource(1000, this));
+  _data_sources.emplace(DataSource::Target, new TargetDataSource(1000, this));
 
   for (auto ds: _data_sources)
-    ds->start();
+    ds.second->start();
 
   setFocusPolicy(Qt::StrongFocus);
   setFocus();
@@ -34,8 +36,8 @@ MainWidget::~MainWidget() {
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete datasources";
   for (auto ds: _data_sources) {
-    ds->stop();
-    delete ds;
+    ds.second->stop();
+    delete ds.second;
   }
 
   if (_timerId == -1)
@@ -48,11 +50,11 @@ MainWidget::~MainWidget() {
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete simple layers";
   for (auto lr: _simple_layers)
-    delete lr;
+    delete lr.second;
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete fbo layers";
   for (auto lr: _tex_layers)
-    delete lr;
+    delete lr.second;
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Delete Info layer";
   delete _info_layer;
@@ -115,7 +117,7 @@ void MainWidget::initializeGL() {
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << "initializeGL" << size() << layout().size;
 
   _projection.setToIdentity();
-  _projection.ortho(geometry());
+  _projection.ortho(QRect(QPoint(0, 0), size()));
 
   initProgram();
   initBuffers();
@@ -127,26 +129,26 @@ void MainWidget::initializeGL() {
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Fonts init finish";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Radar engine init start";
-  _tex_layers.insert(TextureLayer::Radar, new RadarEngine(_state, layout(), context(), this));
+  _tex_layers.emplace(TextureLayer::Radar, new RadarEngine(_state, layout(), context(), this));
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Radar engine init finish";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Trail engine init start";
-  _tex_layers.insert(TextureLayer::Trail, new RadarEngine(_state, layout(), context(), this));
+  _tex_layers.emplace(TextureLayer::Trail, new RadarEngine(_state, layout(), context(), this));
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Trail engine init finish";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Mask engine init start";
-  _tex_layers.insert(TextureLayer::Mask, new MaskEngine(_state, layout(), _fonts, context(), this));
+  _tex_layers.emplace(TextureLayer::Mask, new MaskEngine(_state, layout(), _fonts, context(), this));
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Mask engine init finish";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Magnifier engine init start";
   MagnifierEngine* magnEngine = new MagnifierEngine(_state , layout(), context(), this);
   magnEngine->setAmplitudesVboId(radarLayer()->ampsVboId());
   magnEngine->setPaletteTextureId(radarLayer()->paletteTexId());
-  _tex_layers.insert(TextureLayer::Magnifier, magnEngine);
+  _tex_layers.emplace(TextureLayer::Magnifier, magnEngine);
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Magnifier engine init start";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Menu engine init start";
-  _tex_layers.insert(TextureLayer::Menu, new MenuEngine(layout(), _fonts, context(), this));
+  _tex_layers.emplace(TextureLayer::Menu, new MenuEngine(layout(), _fonts, context(), this));
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Menu engine init start";
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Info engine init start";
@@ -164,7 +166,7 @@ void MainWidget::initializeGL() {
 
   //-------------------------------------------------------------
 
-  _timerId = startTimer(33, Qt::CoarseTimer);
+  _timerId = startTimer(qApp->property(PROPERTY_FRAME_DELAY).toInt(), Qt::CoarseTimer);
 
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "GL init finish";
 }
@@ -201,7 +203,8 @@ void MainWidget::resizeGL(int w, int h) {
   QOpenGLWidget::resizeGL(w, h);
 
   _projection.setToIdentity();
-  _projection.ortho(geometry());
+  _projection.ortho(QRect(QPoint(0, 0), size()));
+
 
   if (_timerId == -1)
     return;
@@ -214,19 +217,45 @@ void MainWidget::resizeGL(int w, int h) {
     return;
 
   for (auto lr : _tex_layers)
-    lr->resizeTexture(layout());
+    lr.second->resizeTexture(layout());
 
   _info_layer->resize(layout());
 }
+
+
+float MainWidget::frameRate() {
+  if (_frameTimes.size() < 2)
+    return 0.f;
+
+  QDateTime f = _frameTimes.first();
+  QDateTime l = _frameTimes.last();
+  int count = _frameTimes.size() - 1;
+
+  return 1000.f / (f.msecsTo(l) / count);
+}
+
+
 
 void MainWidget::paintGL() {
   if (_timerId == -1)
     return;
 
+  QDateTime time = QDateTime::currentDateTime();
+
+  if (_frameTimes.size() == 0 || _frameTimes.last().time().second() != time.time().second())
+    _info_layer->secondChanged();
+
+  _frameTimes.push_back(time);
+  while (_frameTimes.size() > 20)
+    _frameTimes.removeFirst();
+
+  _info_layer->setFps(static_cast<int>(frameRate()));
+
+
   // Update offscreen layers
   // -----------------------------------
   for (auto lr : _tex_layers)
-    lr->paint(_state, layout());
+    lr.second->paint(_state, layout());
 
   _info_layer->update(_state, layout());
   // -----------------------------------
@@ -259,9 +288,10 @@ void MainWidget::paintGL() {
 
   drawRect(menuLayer()->geometry(), menuLayer()->texId());
 
-  drawRect(magnifierLayer()->geometry(), magnifierLayer()->texId());
+  if (_state.state == WidgetState::MAGNIFIER)
+    drawRect(magnifierLayer()->geometry(), magnifierLayer()->texId());
 
-  for (auto block: _info_layer->blocks())
+  for (auto block: infoLayer()->blocks())
     drawRect(block.second->geometry(), block.second->texId());
 
   glBindVertexArray(0);
@@ -299,4 +329,267 @@ void MainWidget::initProgram() {
   _attr_locs[ATTR_TEXCOORD] = static_cast<GLuint>(_program.attributeLocation("texcoord"));
 
   _program.release();
+}
+
+
+void MainWidget::keyReleaseEvent(QKeyEvent *event) {
+  _pressed_keys.remove(event->key());
+  QOpenGLWidget::keyReleaseEvent(event);
+}
+
+
+void MainWidget::keyPressEvent(QKeyEvent* event) {
+  _pressed_keys.insert(event->key());
+  auto mod_keys = event->modifiers();
+
+  if ( std::find(MENU_ENABLED_STATES.cbegin(), MENU_ENABLED_STATES.cend(), _state.state) != MENU_ENABLED_STATES.cend() )
+    menuLayer()->onKeyPressed(event);
+
+  switch(event->key()) {
+  case Qt::Key_PageUp:
+    if (mod_keys & Qt::ControlModifier)
+      emit infoLayer()->updateGain( _state.gain = qMin(_state.gain + 5.0f, 255.0f) );
+
+    if (mod_keys & Qt::AltModifier)
+      emit infoLayer()->updateWater( _state.water = qMin(_state.water + 5.0f, 255.0f) );
+
+    if (mod_keys & Qt::ShiftModifier)
+      emit infoLayer()->updateRain(  _state.rain = qMin(_state.rain + 5.0f, 255.0f) );
+
+    break;
+
+  case Qt::Key_PageDown:
+    if (mod_keys & Qt::ControlModifier)
+      emit infoLayer()->updateGain( _state.gain = qMax(_state.gain - 5.0f, 0.0f) );
+
+    if (mod_keys & Qt::AltModifier)
+      emit infoLayer()->updateWater( _state.water = qMax(_state.water - 5.0f, 0.0f) );
+
+    if (mod_keys & Qt::ShiftModifier)
+      emit infoLayer()->updateRain( _state.rain = qMax(_state.rain - 5.0f, 0.0f) );
+
+    break;
+
+  // Под. имп. Помех
+  case Qt::Key_S:
+    break;
+
+  // Меню
+  case Qt::Key_W:
+    if( _pressed_keys.contains(Qt::Key_B) ) {
+      if (_state.state == WidgetState::CONFIG_MENU)
+        _state.state = WidgetState::DEFAULT;
+      else if (_state.state == WidgetState::DEFAULT)
+        _state.state = WidgetState::CONFIG_MENU;
+
+    } else {
+      if (_state.state == WidgetState::MAIN_MENU)
+        _state.state = WidgetState::DEFAULT;
+      else if (_state.state == WidgetState::DEFAULT)
+        _state.state = WidgetState::MAIN_MENU;
+    }
+
+    menuLayer()->onStateChanged(_state.state);
+    break;
+
+  // Шкала +
+  case Qt::Key_Plus:
+//    if (_state.state == RLIWidgetState::ROUTE_EDITION) {
+//      QPointF pos = QPointF( sin(RLIMath::rads(_state.vn_p)) * _state.vd
+//                           ,-cos(RLIMath::rads(_state.vn_p)) * _state.vd );
+//      //float scale = (_rli_scale.len*RLIMath::MILE2METER) / _maskEngine->getRadius();
+//      GeoPos last_route_point = _routeEngine->getLastPoint();
+//      GeoPos cursor_coords = RLIMath::pos_to_coords( last_route_point, QPoint(0, 0), pos, _state.chart_scale);
+//      _state.visir_center_pos = cursor_coords;
+//      _routeEngine->addPointToCurrent(cursor_coords);
+//
+//      break;
+//    }
+//
+//    _state.radar_scale.prevScale();
+//    _infoEngine->onScaleChanged(_state.radar_scale.getCurScale());
+//    _state.chart_scale = (_state.radar_scale.getCurScale()->len * RLIMath::MILE2METER) / _layout_manager.layout()->circle.radius;
+    break;
+
+  // Шкала -
+  case Qt::Key_Minus:
+//    if (_state.state == RLIWidgetState::ROUTE_EDITION) {
+//      _routeEngine->removePointFromCurrent();
+//      _state.visir_center_pos = _routeEngine->getLastPoint();
+//      break;
+//    }
+//
+//    _state.radar_scale.nextScale();
+//    _infoEngine->onScaleChanged(_state.radar_scale.getCurScale());
+//    _state.chart_scale = (_state.radar_scale.getCurScale()->len * RLIMath::MILE2METER) / _layout_manager.layout()->circle.radius;
+    break;
+
+  // Вынос центра
+  case Qt::Key_C:
+//    _state.center_shift = _state.cursor_pos;
+    break;
+
+  // Скрытое меню
+  case Qt::Key_U:
+    break;
+
+  // Следы точки
+  case Qt::Key_T:
+    break;
+
+  // Выбор цели
+  case Qt::Key_Up:
+//    if (mod_keys & Qt::ControlModifier) {
+//      //_state.ship_position.lat += 0.010;
+//      if (_state.magn_min_rad + _state.magn_height < 800) {
+//        _state.magn_min_rad += 1;
+//      }
+//    } else {
+//      _state.vd += 1.0;
+//      _infoEngine->onVdChanged(_state);
+//    }
+    break;
+
+  // ЛИД / ЛОД
+  case Qt::Key_Down:
+//    if (mod_keys & Qt::ControlModifier) {
+//      //_state.ship_position.lat -= 0.010;
+//      if (_state.magn_min_rad > 0) {
+//        _state.magn_min_rad -= 1;
+//      }
+//    } else {
+//      _state.vd = qMax(0.0, _state.vd - 1.0);
+//      _infoEngine->onVdChanged(_state);
+//    }
+    break;
+
+  case Qt::Key_Left:
+//    if (mod_keys & Qt::ControlModifier) {
+//      //_state.ship_position.lon -= 0.005;
+//      _state.magn_min_peleng = (4096 + _state.magn_min_peleng - 1) % 4096;
+//    } else if (mod_keys & Qt::AltModifier) {
+//      _state.vn_cu = fmod(_state.vn_cu - 1.0, 360.0);
+//    } else if (mod_keys & Qt::ShiftModifier) {
+//      _state.course_mark_angle = fmod(_state.course_mark_angle - 1.0, 360.0);
+//    } else {
+//      _state.vn_p = fmod(_state.vn_p - 1.0, 360.0);
+//      _infoEngine->onVnChanged(_state);
+//    }
+    break;
+
+  case Qt::Key_Right:
+//    if (mod_keys & Qt::ControlModifier) {
+//      //_state.ship_position.lon += 0.005;
+//      _state.magn_min_peleng = (4096 + _state.magn_min_peleng + 1) % 4096;
+//    } else if (mod_keys & Qt::AltModifier) {
+//      _state.vn_cu = fmod(_state.vn_cu + 1.0, 360.0);
+//    } else if (mod_keys & Qt::ShiftModifier) {
+//      _state.course_mark_angle = fmod(_state.course_mark_angle + 1.0, 360.0);
+//    } else {
+//      _state.vn_p = fmod(_state.vn_p + 1.0, 360.0);
+//      _infoEngine->onVnChanged(_state);
+//    }
+    break;
+
+  // Захват
+  case Qt::Key_Return:
+  case Qt::Key_Enter:
+    break;
+
+  //Сброс
+  case Qt::Key_Escape:
+    break;
+
+  // Парал. Линии
+  case Qt::Key_Backslash:
+    _state.show_parallel = !_state.show_parallel;
+    break;
+
+  //Электронная лупа
+  case Qt::Key_L:
+    if ( _state.state == WidgetState::DEFAULT )
+      _state.state = WidgetState::MAGNIFIER;
+    else if ( _state.state == WidgetState::MAGNIFIER )
+      _state.state = WidgetState::DEFAULT;
+    break;
+
+  //Обзор
+  case Qt::Key_X:
+    if (width() == 1024) {
+      setWindowState(Qt::WindowFullScreen);
+    } else {
+      setGeometry(QRect(QPoint(0, 0), QSize(1024, 768)));
+    }
+    break;
+
+  //Узкий / Шир.
+  case Qt::Key_Greater:
+    break;
+
+  //Накоп. Видео
+  case Qt::Key_V:
+    break;
+
+  //Сброс АС
+  case Qt::Key_Q:
+    break;
+
+  //Манёвр
+  case Qt::Key_M:
+    break;
+
+  //Курс / Север / Курс стаб
+  case Qt::Key_H:
+    switch(_state.orientation) {
+      case Orientation::HEAD:
+        _state.orientation = Orientation::NORTH;
+        _state.mode = Mode::X;
+        break;
+      case Orientation::NORTH:
+        _state.orientation = Orientation::COURSE;
+        _state.mode = Mode::S;
+        break;
+      case Orientation::COURSE:
+        _state.orientation = Orientation::HEAD;
+        _state.mode = Mode::T;
+        break;
+    }
+    infoLayer()->onOrientationChanged(_state.orientation);
+    break;
+
+  //ИД / ОД
+  case Qt::Key_R:
+    break;
+
+  //НКД
+  case Qt::Key_D:
+    break;
+
+  //Карта (Маршрут)
+  case Qt::Key_A:
+    break;
+
+  //Выбор
+  case Qt::Key_G:
+    break;
+
+  //Стоп-кадр
+  case Qt::Key_F:
+    break;
+
+  //Откл. Звука
+  case Qt::Key_B:
+    break;
+
+  //Откл. ОК
+  case Qt::Key_K:
+    break;
+
+  //Вынос ВН/ВД
+  case Qt::Key_Slash:
+    _state.show_circles = !_state.show_circles;
+    break;
+  }
+
+  QOpenGLWidget::keyPressEvent(event);
 }

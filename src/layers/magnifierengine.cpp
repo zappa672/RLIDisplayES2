@@ -43,6 +43,9 @@ void MagnifierEngine::paint(const State& s, const Layout&) {
   if (_amp_vbo_id == -1 || _pal_tex_id == -1)
     return;
 
+  if (s.state != WidgetState::MAGNIFIER)
+    return;
+
   glBindFramebuffer(GL_FRAMEBUFFER, fboId());
 
   glDisable(GL_DEPTH_TEST);

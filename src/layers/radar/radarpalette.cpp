@@ -124,9 +124,9 @@ void RadarPalette::updatePalette() {
     palette[j][2] = int(B);
   }
 
-  QImage img(1, 16, QImage::Format_RGB888);
+  QImage img(16, 1, QImage::Format_RGB888);
   for (int i = 0; i < 16; i++)
-    img.setPixel(0, i, qRgb(palette[i][0], palette[i][1], palette[i][2]));
+    img.setPixel(i, 0, qRgb(palette[i][0], palette[i][1], palette[i][2]));
 
   QImage imgGL = QGLWidget::convertToGLFormat(img);
 

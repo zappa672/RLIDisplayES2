@@ -32,7 +32,7 @@ namespace RLI {
     inline const QMatrix4x4&  projection()  const { return _projection; }
     inline const GLuint&      fboId()       const { return _fbo_id; }
 
-    void clear(float r, float g, float b, float a, float d);
+    void clear(float r, float g, float b, float a = 1.0f, float d = 0.0f);
     void resize(const QRect& size);
 
   private:

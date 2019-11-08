@@ -254,11 +254,9 @@ void MaskEngine::initTextBuffers() {
   QVector<GLfloat> orders[2];
   QVector<GLfloat> shifts[2];
 
-  QTextEncoder* encoder = QTextCodec::codecForName("cp866")->makeEncoder();
-
   for (int i = 0; i < 360; i += 10) {    
-    QByteArray tm[2] { encoder->fromUnicode(QString::number(i))
-                     , encoder->fromUnicode(QString::number(i > 180 ? 360-i : i)) };
+    QByteArray tm[2] { Strings::instance().encoder()->fromUnicode(QString::number(i))
+                     , Strings::instance().encoder()->fromUnicode(QString::number(i > 180 ? 360-i : i)) };
 
     for (int j = 0; j < 2; j++) {
       for (int l = 0; l < tm[j].size(); l++) {
@@ -271,8 +269,6 @@ void MaskEngine::initTextBuffers() {
       }
     }
   }
-
-  delete encoder;
 
   _text_point_count[0] = static_cast<uint>(orders[0].size());
   setBuffers(_vbo_ids_text[0], _text_point_count[0], angles[0].data(), chars[0].data(), orders[0].data(), shifts[0].data());

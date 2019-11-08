@@ -6,17 +6,21 @@
 #include <QOpenGLShaderProgram>
 
 #include <QTimerEvent>
+#include <QKeyEvent>
+
+#include <QQueue>
+#include <QSet>
 
 #include "common/state.h"
 #include "common/layout.h"
 
 #include "datasources/datasourcebase.h"
 
-#include "layers/fonts.h"
-
 #include "datasources/radardatasource.h"
 #include "datasources/shipdatasource.h"
 #include "datasources/targetdatasource.h"
+
+#include "layers/fonts.h"
 
 #include "layers/maskengine.h"
 #include "layers/magnifierengine.h"
@@ -54,11 +58,17 @@ namespace RLI {
   protected slots:
     void timerEvent(QTimerEvent* e) override;
 
+    void keyReleaseEvent(QKeyEvent *event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
 
   private:
+    float frameRate();
+    QQueue<QDateTime> _frameTimes;
+
     void debugInfo();
 
     void initProgram();
@@ -76,20 +86,24 @@ namespace RLI {
     inline MenuEngine*      menuLayer()       { return static_cast<MenuEngine*>(_tex_layers[TextureLayer::Menu]);           }
     inline MagnifierEngine* magnifierLayer()  { return static_cast<MagnifierEngine*>(_tex_layers[TextureLayer::Magnifier]); }
 
+    inline InfoEngine*      infoLayer()       { return _info_layer; }
+
     int _timerId = -1;
+    QSet<int> _pressed_keys;
+
 
     State _state;
 
     LayoutManager _layout_manager  { "layouts.xml" };
     inline const Layout& layout() { return _layout_manager.layout(); }
 
-    QMap<DataSource, DataSourceBase*> _data_sources;
+    std::map<DataSource, DataSourceBase*> _data_sources;
 
     Fonts* _fonts;
 
     InfoEngine* _info_layer;
-    QMap<SimpleLayer, LayerBase*> _simple_layers;
-    QMap<TextureLayer, TextureLayerBase*> _tex_layers;
+    std::map<SimpleLayer, LayerBase*> _simple_layers;
+    std::map<TextureLayer, TextureLayerBase*> _tex_layers;
 
     QMatrix4x4 _projection;
 

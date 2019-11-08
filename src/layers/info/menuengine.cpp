@@ -40,7 +40,7 @@ MenuEngine::MenuEngine(const Layout& layout, const Fonts* fonts, QOpenGLContext*
   initMainMenuTree();
   initCnfgMenuTree();
 
-  _menu = _main_menu;
+  _menu = nullptr;
   _last_action_time = QDateTime::currentDateTime();
   _font_tag = layout.menu.font;
   _need_update = true;
@@ -468,7 +468,6 @@ void MenuEngine::onStateChanged(WidgetState state) {
       _menu = nullptr;
       break;
   case WidgetState::ROUTE_EDITION:
-  default:
       break;
   }
 
@@ -605,6 +604,7 @@ void MenuEngine::paint(const State& state, const Layout& layout) {
 
   glViewport(0, 0, width(), height());
 
+  glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
 
   glBindFramebuffer(GL_FRAMEBUFFER, fboId());

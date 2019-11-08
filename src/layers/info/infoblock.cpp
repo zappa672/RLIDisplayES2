@@ -87,10 +87,6 @@ void InfoBlock::paint(const State& state, const Layout&) {
 
   glViewport(0.f, 0.f, width(), height());
 
-  glClearColor(0.12f, 0.63f, 0.10f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
-
-
   glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, projection().data());
 
   glClearColor(_back_color.redF(), _back_color.greenF(), _back_color.blueF(), 1.f);

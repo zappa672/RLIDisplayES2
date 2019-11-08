@@ -9,6 +9,6 @@ void main() {
     gl_FragColor = color;
   else {
     float norm_amp = min(255.0, max(v_amp, 0.0));
-    gl_FragColor = texture2D(texture, vec2(0.5, 1.0 - v_amp / 255.0));
+    gl_FragColor = texture2D(texture, vec2(v_amp / 255.0, 0.5));
   }
 }

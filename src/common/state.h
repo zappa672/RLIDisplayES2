@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QPoint>
 
+#include <set>
+
 #include "radarscale.h"
 #include "strings.h"
 #include "math.h"
@@ -22,6 +24,10 @@ namespace RLI {
   , MAGNIFIER      = 3
   , ROUTE_EDITION  = 4
   };
+
+  static std::set<WidgetState> MENU_ENABLED_STATES  { WidgetState::MAIN_MENU
+                                                    , WidgetState::CONFIG_MENU
+                                                    , WidgetState::ROUTE_EDITION };
 
   enum class Orientation {
     HEAD     = 0
@@ -74,7 +80,7 @@ namespace RLI {
     // Radar parameters
     int peleng_count      { 4096 };
     int peleng_size       { 800  };
-    float amp_threashold  { 8.f / 255.f  };
+    float amp_threashold  { 24.f / 255.f  };
 
     // Magnifier parameters
     int magn_min_rad    { 96  };

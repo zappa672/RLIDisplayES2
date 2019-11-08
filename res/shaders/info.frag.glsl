@@ -1,9 +1,8 @@
 uniform vec4  color;
+uniform sampler2D glyph_tex;
 
 varying float v_char_val;
-varying vec2	v_texcoords;
-
-uniform sampler2D glyph_tex;
+varying vec2 v_texcoords;
 
 void main() {
   if (v_char_val != 0.0) {

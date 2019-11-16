@@ -13,7 +13,7 @@ namespace RLI {
     Q_OBJECT
   public:
     TextureLayerBase(const QRect& size, QOpenGLContext* context, QObject* parent = nullptr);
-    virtual ~TextureLayerBase();
+    virtual ~TextureLayerBase() override;
 
     inline const QRect&   geometry()    const { return _fbo_rect; }
 
@@ -24,11 +24,11 @@ namespace RLI {
     inline int            height()  const { return _fbo_rect.height(); }
 
   public slots:
-    virtual void paint(const State& state, const Layout& layout) =0;
+    virtual void paint(const State& state, const Layout& layout) override =0;
     virtual void resizeTexture(const Layout& layout) =0;
     virtual void clearTexture() =0;
 
-  protected:
+  protected slots:
     inline const QMatrix4x4&  projection()  const { return _projection; }
     inline const GLuint&      fboId()       const { return _fbo_id; }
 

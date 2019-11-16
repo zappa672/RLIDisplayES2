@@ -73,20 +73,20 @@ void MainWidget::debugInfo() {
   std::cout << std::endl << "Extensions: " << reinterpret_cast<const char*>( glGetString(GL_EXTENSIONS) ) << std::endl << std::endl;
 
   int val;
-  glGetIntegerv(GL_MAX_FRAMEBUFFER_WIDTH, &val);
-  std::cout << "GL_MAX_FRAMEBUFFER_WIDTH: " << val << std::endl;
-
-  glGetIntegerv(GL_MAX_FRAMEBUFFER_HEIGHT, &val);
-  std::cout << "GL_MAX_FRAMEBUFFER_HEIGHT: " << val << std::endl;
-
-  glGetIntegerv(GL_MAX_FRAMEBUFFER_LAYERS, &val);
-  std::cout << "GL_MAX_FRAMEBUFFER_LAYERS: " << val << std::endl;
-
-  glGetIntegerv(GL_MAX_FRAMEBUFFER_SAMPLES, &val);
-  std::cout << "GL_MAX_FRAMEBUFFER_SAMPLES: " << val << std::endl;
-
   glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &val);
   std::cout << "GL_MAX_TEXTURE_IMAGE_UNITS: " << val << std::endl;
+
+  //glGetIntegerv(GL_MAX_FRAMEBUFFER_WIDTH, &val);
+  //std::cout << "GL_MAX_FRAMEBUFFER_WIDTH: " << val << std::endl;
+  //
+  //glGetIntegerv(GL_MAX_FRAMEBUFFER_HEIGHT, &val);
+  //std::cout << "GL_MAX_FRAMEBUFFER_HEIGHT: " << val << std::endl;
+  //
+  //glGetIntegerv(GL_MAX_FRAMEBUFFER_LAYERS, &val);
+  //std::cout << "GL_MAX_FRAMEBUFFER_LAYERS: " << val << std::endl;
+  //
+  //glGetIntegerv(GL_MAX_FRAMEBUFFER_SAMPLES, &val);
+  //std::cout << "GL_MAX_FRAMEBUFFER_SAMPLES: " << val << std::endl;
 
   std::cout << "-----------------------" << std::endl;
 }
@@ -116,8 +116,8 @@ void MainWidget::initializeGL() {
   _layout_manager.resize(size());
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << "initializeGL" << size() << layout().size;
 
-  _projection.setToIdentity();
-  _projection.ortho(QRect(QPoint(0, 0), size()));
+  _state.projection.setToIdentity();
+  _state.projection.ortho(QRect(QPoint(0, 0), size()));
 
   initProgram();
   initBuffers();
@@ -154,6 +154,19 @@ void MainWidget::initializeGL() {
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Info engine init start";
   _info_layer = new InfoEngine(layout(), context(), _fonts, this);
   qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Info engine init start";
+
+
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Controls engine init start";
+  _simple_layers.emplace(SimpleLayer::Controls, new ControlsEngine(context(), this));
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Controls engine init start";
+
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Route engine init start";
+  _simple_layers.emplace(SimpleLayer::Route, new RouteEngine(context(), this));
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Route engine init start";
+
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Targets engine init start";
+  _simple_layers.emplace(SimpleLayer::Targets, new TargetEngine(context(), this));
+  qDebug() << QDateTime::currentDateTime().toString("hh:mm:ss zzz") << ": " << "Targets engine init start";
   //-------------------------------------------------------------
 
   connect( radarDS(), SIGNAL(updateRadarData(int, int, GLfloat*))
@@ -202,9 +215,8 @@ void MainWidget::resizeGL(int w, int h) {
 
   QOpenGLWidget::resizeGL(w, h);
 
-  _projection.setToIdentity();
-  _projection.ortho(QRect(QPoint(0, 0), size()));
-
+  _state.projection.setToIdentity();
+  _state.projection.ortho(QRect(QPoint(0, 0), size()));
 
   if (_timerId == -1)
     return;
@@ -279,10 +291,14 @@ void MainWidget::paintGL() {
   glActiveTexture(GL_TEXTURE0);
 
   _program.setUniformValue("texture", 0);
-  _program.setUniformValue("mvp_matrix", _projection);
+  _program.setUniformValue("mvp_matrix", _state.projection);
 
   drawRect(radarLayer()->geometry(), radarLayer()->texId());
   drawRect(trailLayer()->geometry(), trailLayer()->texId());
+
+  //targtLayer()->paint(_state, layout());
+  //routeLayer()->paint(_state, layout());
+  //cntrlLayer()->paint(_state, layout());
 
   drawRect(maskLayer()->geometry(), maskLayer()->texId());
 

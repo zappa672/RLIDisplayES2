@@ -10,5 +10,11 @@
         <file>shaders/magn.vert.glsl</file>
         <file>shaders/info.vert.glsl</file>
         <file>shaders/info.frag.glsl</file>
+        <file>shaders/trgt.frag.glsl</file>
+        <file>shaders/trgt.vert.glsl</file>
+        <file>shaders/route.frag.glsl</file>
+        <file>shaders/route.vert.glsl</file>
+        <file>shaders/ctrl.vert.glsl</file>
+        <file>shaders/ctrl.frag.glsl</file>
     </qresource>
 </RCC>

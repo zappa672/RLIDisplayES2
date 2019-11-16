@@ -37,10 +37,13 @@ CONFIG += c++11
 
 SOURCES += \
   src/datasources/datasourcebase.cpp \
+  src/layers/controlsengine.cpp \
   src/layers/info/infoblock.cpp \
   src/layers/info/infoengine.cpp \
   src/layers/info/menuengine.cpp \
   src/layers/info/menuitem.cpp \
+  src/layers/routeengine.cpp \
+  src/layers/targetengine.cpp \
   src/layers/texturelayerbase.cpp \
   src/main.cpp \
   src/mainwidget.cpp \
@@ -63,10 +66,13 @@ SOURCES += \
 HEADERS += \
   src/common/structures.h \
   src/datasources/datasourcebase.h \
+  src/layers/controlsengine.h \
   src/layers/info/infoblock.h \
   src/layers/info/infoengine.h \
   src/layers/info/menuengine.h \
   src/layers/info/menuitem.h \
+  src/layers/routeengine.h \
+  src/layers/targetengine.h \
   src/layers/texturelayerbase.h \
   src/mainwidget.h \
   src/common/layout.h \

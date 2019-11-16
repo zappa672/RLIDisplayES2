@@ -6,7 +6,7 @@ using namespace RLI;
 using namespace RLI::Math;
 
 // o - circle center, r - circle radius, p - ray origin, phi - ray direction
-QPointF intersectRayCircle(QPointF o, double r, QPointF p, double phi) {
+QPointF RLI::Math::intersectRayCircle(QPointF o, double r, QPointF p, double phi) {
   double dy = p.y()-o.y();
   double dx = p.x()-o.x();
   double r2 = r*r;
@@ -68,7 +68,7 @@ QPointF intersectRayCircle(QPointF o, double r, QPointF p, double phi) {
   }
 }
 
-GeoPos pos_to_coords(const GeoPos& center_coords, const QPointF& center_position, const QPointF& position, double scale) {
+GeoPos RLI::Math::pos_to_coords(const GeoPos& center_coords, const QPointF& center_position, const QPointF& position, double scale) {
   double erad_pix = ERADM / scale;
   QPointF pos_p = position - center_position;
 
@@ -78,7 +78,7 @@ GeoPos pos_to_coords(const GeoPos& center_coords, const QPointF& center_position
   return { lat, lon };
 }
 
-QPointF coords_to_pos(const GeoPos& center_coords, const GeoPos& coords, const QPointF& center_position, double scale ) {
+QPointF RLI::Math::coords_to_pos(const GeoPos& center_coords, const GeoPos& coords, const QPointF& center_position, double scale ) {
   double erad_pix = ERADM / scale;
   double y_p = -erad_pix * rads(coords.lat - center_coords.lat);
   double x_p =  erad_pix * cos(rads(center_coords.lat)) * rads(coords.lon - center_coords.lon);
@@ -100,7 +100,7 @@ double RLI::Math::GCDistance(const GeoPos& p1, const GeoPos& p2) {
 }
 
 
-double GCAzimuth(double lat1, double lon1, double lat2, double lon2) {
+double RLI::Math::GCAzimuth(double lat1, double lon1, double lat2, double lon2) {
   double result = 0.0;
 
   int ilat1 = static_cast<int>(0.50 + lat1 * 360000.0);
@@ -141,7 +141,7 @@ double GCAzimuth(double lat1, double lon1, double lat2, double lon2) {
   return result;
 }
 
-double ApproxDistance(double lat1, double lon1, double lat2, double lon2) {
+double RLI::Math::ApproxDistance(double lat1, double lon1, double lat2, double lon2) {
   lat1 =  DEG2RAD * lat1;
   lon1 = -DEG2RAD * lon1;
   lat2 =  DEG2RAD * lat2;
@@ -168,7 +168,7 @@ double ApproxDistance(double lat1, double lon1, double lat2, double lon2) {
   return (D * (1 + FLATTENING * H1 * sinf*sinf*cosg*cosg - FLATTENING*H2*cosf*cosf*sing*sing));
 }
 
-double EllipsoidDistance(double lat1, double lon1, double lat2, double lon2) {
+double RLI::Math::EllipsoidDistance(double lat1, double lon1, double lat2, double lon2) {
   double distance = 0.0;
   double faz, baz;
   double r = 1.0 - FLATTENING;

@@ -22,6 +22,10 @@
 
 #include "layers/fonts.h"
 
+#include "layers/controlsengine.h"
+#include "layers/routeengine.h"
+#include "layers/targetengine.h"
+
 #include "layers/maskengine.h"
 #include "layers/magnifierengine.h"
 #include "layers/maskengine.h"
@@ -38,7 +42,7 @@ namespace RLI {
 
   enum class SimpleLayer : int
   { Controls  = 0
-  , Path      = 1
+  , Route     = 1
   , Targets   = 2 };
 
   enum class TextureLayer : int
@@ -80,6 +84,10 @@ namespace RLI {
     inline ShipDataSource*    shipDS()    { return static_cast<ShipDataSource*>(_data_sources[DataSource::Ship]);     }
     inline TargetDataSource*  targetDS()  { return static_cast<TargetDataSource*>(_data_sources[DataSource::Target]); }
 
+    inline ControlsEngine*  cntrlLayer()      { return static_cast<ControlsEngine*>(_simple_layers[SimpleLayer::Controls]);  }
+    inline RouteEngine*     routeLayer()      { return static_cast<RouteEngine*>(_simple_layers[SimpleLayer::Route]);        }
+    inline TargetEngine*    targtLayer()      { return static_cast<TargetEngine*>(_simple_layers[SimpleLayer::Targets]);     }
+
     inline RadarEngine*     radarLayer()      { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Radar]);         }
     inline RadarEngine*     trailLayer()      { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Trail]);         }
     inline MaskEngine*      maskLayer()       { return static_cast<MaskEngine*>(_tex_layers[TextureLayer::Mask]);           }
@@ -105,7 +113,6 @@ namespace RLI {
     std::map<SimpleLayer, LayerBase*> _simple_layers;
     std::map<TextureLayer, TextureLayerBase*> _tex_layers;
 
-    QMatrix4x4 _projection;
 
     QOpenGLShaderProgram _program;
     enum { ATTR_POSITION = 0

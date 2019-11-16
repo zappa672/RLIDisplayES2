@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QPoint>
+#include <QMatrix4x4>
 
 #include <set>
 
@@ -58,7 +59,10 @@ namespace RLI {
     // Radar parameters
 
     // Chart parameters
+    QMatrix4x4  projection;
+
     double      north_shift   { 45.0 };
+    double      chart_scale   { 1620 };
     RadarScale  radar_scale   { };
     QPoint      center_shift  { -120, 80 };
 

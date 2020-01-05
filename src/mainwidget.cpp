@@ -8,6 +8,8 @@
 #include <QGuiApplication>
 
 #include <iostream>
+#include <cmath>
+#include <qmath.h>
 
 
 using namespace RLI;
@@ -231,7 +233,23 @@ void MainWidget::resizeGL(int w, int h) {
   for (auto lr : _tex_layers)
     lr.second->resizeTexture(layout());
 
-  _info_layer->resize(layout());
+  infoLayer()->resize(layout());
+
+
+  infoLayer()->secondChanged();
+  infoLayer()->setFps(static_cast<int>(frameRate()));
+  infoLayer()->onPositionChanged(_state.ship_position);
+  infoLayer()->onTargetCountChanged(targetLayer()->targetCount());
+  infoLayer()->onSelectedTargetUpdated(targetLayer()->selectedTag(), targetLayer()->selectedTrgt());
+
+  infoLayer()->onScaleChanged(&_state.radar_scale);
+  _state.chart_scale = (_state.radar_scale.current()->len * Math::MILE2METER) / layout().circle.radius;
+
+  infoLayer()->updateGain(_state.gain);
+  infoLayer()->updateWater(_state.water);
+  infoLayer()->updateRain(_state.rain);
+  infoLayer()->updateApch(_state.apch);
+  infoLayer()->updateEmission(_state.emission);
 }
 
 
@@ -296,9 +314,15 @@ void MainWidget::paintGL() {
   drawRect(radarLayer()->geometry(), radarLayer()->texId());
   drawRect(trailLayer()->geometry(), trailLayer()->texId());
 
-  //targtLayer()->paint(_state, layout());
-  //routeLayer()->paint(_state, layout());
-  //cntrlLayer()->paint(_state, layout());
+  _program.release();
+  glBindVertexArray(0);
+
+  targetLayer()->paint(_state, layout());
+  routeLayer()->paint(_state, layout());
+  cntrlLayer()->paint(_state, layout());
+
+  _program.bind();
+  glBindVertexArray(_vao_id);
 
   drawRect(maskLayer()->geometry(), maskLayer()->texId());
 
@@ -410,39 +434,39 @@ void MainWidget::keyPressEvent(QKeyEvent* event) {
 
   // Шкала +
   case Qt::Key_Plus:
-//    if (_state.state == RLIWidgetState::ROUTE_EDITION) {
-//      QPointF pos = QPointF( sin(RLIMath::rads(_state.vn_p)) * _state.vd
-//                           ,-cos(RLIMath::rads(_state.vn_p)) * _state.vd );
-//      //float scale = (_rli_scale.len*RLIMath::MILE2METER) / _maskEngine->getRadius();
-//      GeoPos last_route_point = _routeEngine->getLastPoint();
-//      GeoPos cursor_coords = RLIMath::pos_to_coords( last_route_point, QPoint(0, 0), pos, _state.chart_scale);
-//      _state.visir_center_pos = cursor_coords;
-//      _routeEngine->addPointToCurrent(cursor_coords);
-//
-//      break;
-//    }
-//
-//    _state.radar_scale.prevScale();
-//    _infoEngine->onScaleChanged(_state.radar_scale.getCurScale());
-//    _state.chart_scale = (_state.radar_scale.getCurScale()->len * RLIMath::MILE2METER) / _layout_manager.layout()->circle.radius;
+    if (_state.state == WidgetState::ROUTE_EDITION) {
+      QPointF pos = QPointF( sin(Math::rads(_state.vn_p)) * _state.vd
+                           ,-cos(Math::rads(_state.vn_p)) * _state.vd );
+      //float scale = (_rli_scale.len*RLIMath::MILE2METER) / _maskEngine->getRadius();
+      GeoPos last_route_point = routeLayer()->getLastPoint();
+      GeoPos cursor_coords = Math::pos_to_coords( last_route_point, QPoint(0, 0), pos, _state.chart_scale);
+      _state.visir_center_pos = cursor_coords;
+      routeLayer()->addPointToCurrent(cursor_coords);
+
+      break;
+    }
+
+    _state.radar_scale.prevScale();
+    infoLayer()->onScaleChanged(&_state.radar_scale);
+    _state.chart_scale = (_state.radar_scale.current()->len * Math::MILE2METER) / _layout_manager.layout().circle.radius;
     break;
 
   // Шкала -
   case Qt::Key_Minus:
-//    if (_state.state == RLIWidgetState::ROUTE_EDITION) {
-//      _routeEngine->removePointFromCurrent();
-//      _state.visir_center_pos = _routeEngine->getLastPoint();
-//      break;
-//    }
-//
-//    _state.radar_scale.nextScale();
-//    _infoEngine->onScaleChanged(_state.radar_scale.getCurScale());
-//    _state.chart_scale = (_state.radar_scale.getCurScale()->len * RLIMath::MILE2METER) / _layout_manager.layout()->circle.radius;
+    if (_state.state == WidgetState::ROUTE_EDITION) {
+      routeLayer()->removePointFromCurrent();
+      _state.visir_center_pos = routeLayer()->getLastPoint();
+      break;
+    }
+
+    _state.radar_scale.nextScale();
+    infoLayer()->onScaleChanged(&_state.radar_scale);
+    _state.chart_scale = (_state.radar_scale.current()->len * Math::MILE2METER) / _layout_manager.layout().circle.radius;
     break;
 
   // Вынос центра
   case Qt::Key_C:
-//    _state.center_shift = _state.cursor_pos;
+    _state.center_shift = _state.cursor_pos;
     break;
 
   // Скрытое меню
@@ -455,56 +479,56 @@ void MainWidget::keyPressEvent(QKeyEvent* event) {
 
   // Выбор цели
   case Qt::Key_Up:
-//    if (mod_keys & Qt::ControlModifier) {
-//      //_state.ship_position.lat += 0.010;
-//      if (_state.magn_min_rad + _state.magn_height < 800) {
-//        _state.magn_min_rad += 1;
-//      }
-//    } else {
-//      _state.vd += 1.0;
-//      _infoEngine->onVdChanged(_state);
-//    }
+    if (mod_keys & Qt::ControlModifier) {
+      //_state.ship_position.lat += 0.010;
+      if (_state.magn_min_rad + _state.magn_height < 800) {
+        _state.magn_min_rad += 1;
+      }
+    } else {
+      _state.vd += 1.0;
+      infoLayer()->onVdChanged(_state);
+    }
     break;
 
   // ЛИД / ЛОД
   case Qt::Key_Down:
-//    if (mod_keys & Qt::ControlModifier) {
-//      //_state.ship_position.lat -= 0.010;
-//      if (_state.magn_min_rad > 0) {
-//        _state.magn_min_rad -= 1;
-//      }
-//    } else {
-//      _state.vd = qMax(0.0, _state.vd - 1.0);
-//      _infoEngine->onVdChanged(_state);
-//    }
+    if (mod_keys & Qt::ControlModifier) {
+      //_state.ship_position.lat -= 0.010;
+      if (_state.magn_min_rad > 0) {
+        _state.magn_min_rad -= 1;
+      }
+    } else {
+      _state.vd = qMax(0.0, _state.vd - 1.0);
+      infoLayer()->onVdChanged(_state);
+    }
     break;
 
   case Qt::Key_Left:
-//    if (mod_keys & Qt::ControlModifier) {
-//      //_state.ship_position.lon -= 0.005;
-//      _state.magn_min_peleng = (4096 + _state.magn_min_peleng - 1) % 4096;
-//    } else if (mod_keys & Qt::AltModifier) {
-//      _state.vn_cu = fmod(_state.vn_cu - 1.0, 360.0);
-//    } else if (mod_keys & Qt::ShiftModifier) {
-//      _state.course_mark_angle = fmod(_state.course_mark_angle - 1.0, 360.0);
-//    } else {
-//      _state.vn_p = fmod(_state.vn_p - 1.0, 360.0);
-//      _infoEngine->onVnChanged(_state);
-//    }
+    if (mod_keys & Qt::ControlModifier) {
+      //_state.ship_position.lon -= 0.005;
+      _state.magn_min_peleng = (4096 + _state.magn_min_peleng - 1) % 4096;
+    } else if (mod_keys & Qt::AltModifier) {
+      _state.vn_cu = fmod(_state.vn_cu - 1.0, 360.0);
+    } else if (mod_keys & Qt::ShiftModifier) {
+      _state.course_mark_angle = fmod(_state.course_mark_angle - 1.0, 360.0);
+    } else {
+      _state.vn_p = fmod(_state.vn_p - 1.0, 360.0);
+      infoLayer()->onVnChanged(_state);
+    }
     break;
 
   case Qt::Key_Right:
-//    if (mod_keys & Qt::ControlModifier) {
-//      //_state.ship_position.lon += 0.005;
-//      _state.magn_min_peleng = (4096 + _state.magn_min_peleng + 1) % 4096;
-//    } else if (mod_keys & Qt::AltModifier) {
-//      _state.vn_cu = fmod(_state.vn_cu + 1.0, 360.0);
-//    } else if (mod_keys & Qt::ShiftModifier) {
-//      _state.course_mark_angle = fmod(_state.course_mark_angle + 1.0, 360.0);
-//    } else {
-//      _state.vn_p = fmod(_state.vn_p + 1.0, 360.0);
-//      _infoEngine->onVnChanged(_state);
-//    }
+    if (mod_keys & Qt::ControlModifier) {
+      //_state.ship_position.lon += 0.005;
+      _state.magn_min_peleng = (4096 + _state.magn_min_peleng + 1) % 4096;
+    } else if (mod_keys & Qt::AltModifier) {
+      _state.vn_cu = fmod(_state.vn_cu + 1.0, 360.0);
+    } else if (mod_keys & Qt::ShiftModifier) {
+      _state.course_mark_angle = fmod(_state.course_mark_angle + 1.0, 360.0);
+    } else {
+      _state.vn_p = fmod(_state.vn_p + 1.0, 360.0);
+      infoLayer()->onVnChanged(_state);
+    }
     break;
 
   // Захват
@@ -608,4 +632,26 @@ void MainWidget::keyPressEvent(QKeyEvent* event) {
   }
 
   QOpenGLWidget::keyPressEvent(event);
+}
+
+void MainWidget::mouseMoveEvent(QMouseEvent* event) {
+  auto diff = event->pos() - _layout_manager.layout().circle.center;
+  QVector2D diffV(diff);
+  if (diffV.length() < 0.66f * _layout_manager.layout().circle.radius)
+    _state.cursor_pos = diff;
+
+  double bearing = Math::degs(qAtan2(static_cast<double>(diffV.x()), static_cast<double>(-diffV.y())));
+
+  if (bearing < 0 && _state.orientation == Orientation::NORTH)
+    bearing = 360 + bearing;
+
+  infoLayer()->onCursorPosChanged( static_cast<double>(diffV.length()), bearing );
+}
+
+void MainWidget::mousePressEvent(QMouseEvent* event) {
+  auto coords = Math::pos_to_coords( _state.ship_position
+                                   , _layout_manager.layout().circle.center
+                                   , event->pos()
+                                   , _state.chart_scale );
+  targetLayer()->select(coords, _state.chart_scale);
 }

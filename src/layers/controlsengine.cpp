@@ -37,6 +37,12 @@ ControlsEngine::~ControlsEngine() {
 void ControlsEngine::paint(const State &state, const Layout &layout) {
   glUseProgram(progId());
 
+  QMatrix4x4 transform0;
+  transform0.setToIdentity();
+  transform0.translate( layout.circle.center.x() + state.center_shift.x()
+                      , layout.circle.center.y() + state.center_shift.y()
+                      , 0);
+
   QMatrix4x4 transform;
   transform.setToIdentity();
 
@@ -45,7 +51,7 @@ void ControlsEngine::paint(const State &state, const Layout &layout) {
     transform.translate(static_cast<GLfloat>(tr.x()), static_cast<GLfloat>(tr.y()), 0.f);
   }
 
-  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, (state.projection*transform).data());
+  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, (state.projection*transform0*transform).data());
 
   // Визир дальности
   drawCircleSegment(COLOR_VD,  static_cast<float>(state.vd));
@@ -80,8 +86,8 @@ void ControlsEngine::paint(const State &state, const Layout &layout) {
   // ----------------------
 
   // Magnifier zone
-  double magn_min_angle = (state.magn_min_peleng / 4096.0) * 360.0 + state.north_shift;
-  double magn_max_angle = ((state.magn_min_peleng + state.magn_width) / 4096.0) * 360.0 + state.north_shift;
+  float magn_min_angle = static_cast<float>((state.magn_min_peleng / 4096.0) * 360.0 + state.north_shift);
+  float magn_max_angle = static_cast<float>(((state.magn_min_peleng + state.magn_width) / 4096.0) * 360.0 + state.north_shift);
 
   drawRaySegment   (COLOR_MAGNIFIER, magn_min_angle,  state.magn_min_rad,  state.magn_min_rad + state.magn_height);
   drawRaySegment   (COLOR_MAGNIFIER, magn_max_angle,  state.magn_min_rad,  state.magn_min_rad + state.magn_height);
@@ -94,7 +100,7 @@ void ControlsEngine::paint(const State &state, const Layout &layout) {
   transform.setToIdentity();
   transform.translate(static_cast<GLfloat>(cusor_shift.x()), static_cast<GLfloat>(cusor_shift.y()), 0.f);
 
-  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, (state.projection*transform).data());
+  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, (state.projection*transform0*transform).data());
 
   drawCursor(COLOR_CURSOR);
   // ----------------------
@@ -109,11 +115,11 @@ void ControlsEngine::paint(const State &state, const Layout &layout) {
   transform.setToIdentity();
   transform.translate( static_cast<GLfloat>(tr_cm.x()), static_cast<GLfloat>(tr_cm.y()), 0.f);
 
-  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, (state.projection*transform).data());
+  glUniformMatrix4fv(unifLoc(UNIF_MVP), 1, GL_FALSE, (state.projection*transform0*transform).data());
 
-  drawRaySegment(COLOR_COURSE_MARKER, state.course_mark_angle-45, 0, 16, 0);
-  drawRaySegment(COLOR_COURSE_MARKER,    state.course_mark_angle, 0, 16, 0);
-  drawRaySegment(COLOR_COURSE_MARKER, state.course_mark_angle+45, 0, 16, 0);
+  drawRaySegment(COLOR_COURSE_MARKER, static_cast<GLfloat>(state.course_mark_angle-45), 0, 16, 0);
+  drawRaySegment(COLOR_COURSE_MARKER, static_cast<GLfloat>(state.course_mark_angle   ), 0, 16, 0);
+  drawRaySegment(COLOR_COURSE_MARKER, static_cast<GLfloat>(state.course_mark_angle+45), 0, 16, 0);
   // ----------------------
 
 

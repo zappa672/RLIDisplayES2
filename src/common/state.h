@@ -61,10 +61,10 @@ namespace RLI {
     // Chart parameters
     QMatrix4x4  projection;
 
-    double      north_shift   { 45.0 };
+    double      north_shift   { 0 };
     double      chart_scale   { 1620 };
     RadarScale  radar_scale   { };
-    QPoint      center_shift  { -120, 80 };
+    QPoint      center_shift  { 0, 0 };
 
     // Ship parameters
     GeoPos  ship_position     { 0, 0 };

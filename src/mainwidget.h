@@ -64,6 +64,8 @@ namespace RLI {
 
     void keyReleaseEvent(QKeyEvent *event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
 
     void initializeGL() override;
     void resizeGL(int w, int h) override;
@@ -86,7 +88,7 @@ namespace RLI {
 
     inline ControlsEngine*  cntrlLayer()      { return static_cast<ControlsEngine*>(_simple_layers[SimpleLayer::Controls]);  }
     inline RouteEngine*     routeLayer()      { return static_cast<RouteEngine*>(_simple_layers[SimpleLayer::Route]);        }
-    inline TargetEngine*    targtLayer()      { return static_cast<TargetEngine*>(_simple_layers[SimpleLayer::Targets]);     }
+    inline TargetEngine*    targetLayer()     { return static_cast<TargetEngine*>(_simple_layers[SimpleLayer::Targets]);     }
 
     inline RadarEngine*     radarLayer()      { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Radar]);         }
     inline RadarEngine*     trailLayer()      { return static_cast<RadarEngine*>(_tex_layers[TextureLayer::Trail]);         }
